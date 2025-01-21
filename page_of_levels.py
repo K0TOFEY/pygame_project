@@ -12,7 +12,7 @@ def lvl_page(screen):
     bg = pygame.image.load("Фон 800х600.jpg")
     screen.blit(bg, (0, 0))
 
-    # Кнопки уровней
+    # Buttons уровней
     level_1 = pygame.image.load("lvl1.png")
     level_2 = pygame.image.load("lvl2.png")
     level_3 = pygame.image.load("lvl3.png")

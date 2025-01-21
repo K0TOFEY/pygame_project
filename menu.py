@@ -10,7 +10,7 @@ def main_menu(screen):
     bg = pygame.image.load("Фон 800х600.jpg")
     screen.blit(bg, (0, 0))
 
-    # Кнопки
+    # Buttons
     st_btn_rect = st_btn.get_rect(topleft=(275, 250))
     qt_btn_rect = qt_btn.get_rect(topleft=(275, 350))
 

@@ -5,14 +5,14 @@ from contour_guidance import contour
 
 def main_menu(screen):
     clock = pygame.time.Clock()
-    st_btn = pygame.image.load("start_btn.png")
-    qt_btn = pygame.image.load("quit_btn.png")
+    st_btn = pygame.image.load("Buttons/start_btn.png")
+    qt_btn = pygame.image.load("Buttons/quit_btn.png")
 
     # Фон
-    bg = pygame.image.load("Фон 800х600.jpg")
+    bg = pygame.image.load("Backgrounds/start_bg.jpg")
     screen.blit(bg, (0, 0))
 
-    # Кнопки
+    # Buttons
     st_btn_rect = st_btn.get_rect(topleft=(275, 250))
     qt_btn_rect = qt_btn.get_rect(topleft=(275, 350))
 
@@ -48,21 +48,22 @@ def main_menu(screen):
                     sys.exit()
 
         # Наводка на кнопку
-        contour(screen, st_btn_rect, 'click_start_btn.png', 'start_btn.png') # кнопка старт
+        contour(screen, st_btn_rect, 'Buttons/click_start_btn.png', 'Buttons/start_btn.png')  # кнопка старт
 
-        contour(screen, qt_btn_rect, 'click_qt_btn.png', 'quit_btn.png') # кнопка выйти
+        contour(screen, qt_btn_rect, 'Buttons/click_qt_btn.png', 'Buttons/quit_btn.png')  # кнопка выйти
 
         pygame.display.update()
 
+
 def lvl_page(screen):
-    bg = pygame.image.load("Фон 800х600.jpg")
+    bg = pygame.image.load("Backgrounds/start_bg.jpg")
     screen.blit(bg, (0, 0))
 
-    # Кнопки уровней
-    level_1 = pygame.image.load("lvl1.png")
-    level_2 = pygame.image.load("lvl2.png")
-    level_3 = pygame.image.load("lvl3.png")
-    back = pygame.image.load("back.png")
+    # Buttons уровней
+    level_1 = pygame.image.load("Buttons/lvl1.png")
+    level_2 = pygame.image.load("Buttons/lvl2.png")
+    level_3 = pygame.image.load("Buttons/lvl3.png")
+    back = pygame.image.load("Buttons/back.png")
 
     # Rect_of_levels
     rect_level_1 = level_1.get_rect(topleft=(175, 250))
@@ -100,15 +101,16 @@ def lvl_page(screen):
                     main_menu(screen)
 
         # Наводка на кнопки
-        contour(screen, rect_level_1, 'cl_lvl1.png', 'lvl1.png') # Кнопка уровня 1
+        contour(screen, rect_level_1, 'Buttons/cl_lvl1.png', 'Buttons/lvl1.png')  # Кнопка уровня 1
 
-        contour(screen, rect_level_2, 'cl_lvl2.png', 'lvl2.png') # Кнопка уровня 2
+        contour(screen, rect_level_2, 'Buttons/cl_lvl2.png', 'Buttons/lvl2.png')  # Кнопка уровня 2
 
-        contour(screen, rect_level_3, 'cl_lvl3.png', 'lvl3.png') # Кнопка уровня 3
+        contour(screen, rect_level_3, 'Buttons/cl_lvl3.png', 'Buttons/lvl3.png')  # Кнопка уровня 3
 
-        contour(screen, rect_back, 'cl_back.png', 'back.png') # Кнопка назад
+        contour(screen, rect_back, 'Buttons/cl_back.png', 'Buttons/back.png')  # Кнопка назад
 
         pygame.display.update()
+
 
 clock = pygame.time.Clock()
 
