@@ -1,5 +1,6 @@
 import pygame
 import sys
+import pytmx
 
 def main_menu(screen):
     clock = pygame.time.Clock()
@@ -7,7 +8,7 @@ def main_menu(screen):
     qt_btn = pygame.image.load("quit_btn.png")
 
     # Фон
-    bg = pygame.image.load("Фон 800х600.jpg")
+    bg = pygame.image.load("start_bg.jpg")
     screen.blit(bg, (0, 0))
 
     # Buttons

@@ -1,7 +1,9 @@
 import pygame
 import sys
+import pytmx
 
 from contour_guidance import contour
+from test_level import level1
 
 def main_menu(screen):
     clock = pygame.time.Clock()
@@ -99,6 +101,10 @@ def lvl_page(screen):
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if rect_back.collidepoint(event.pos):
                     main_menu(screen)
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if rect_level_1.collidepoint(event.pos):
+                    level1(screen)
 
         # Наводка на кнопки
         contour(screen, rect_level_1, 'Buttons/cl_lvl1.png', 'Buttons/lvl1.png')  # Кнопка уровня 1
