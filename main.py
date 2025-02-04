@@ -1,10 +1,18 @@
 import pygame
 import sys
-import pytmx
 
-from contour_guidance import contour
-from test_level import level1
 
+# Вспомогательные функции
+def contour(screen, rect, first_file, second_file):
+    if rect.collidepoint(pygame.mouse.get_pos()):
+        btn = pygame.image.load(f"{first_file}")
+        screen.blit(btn, rect)
+    else:
+        btn = pygame.image.load(f"{second_file}")
+        screen.blit(btn, rect)
+
+
+# Функция главного меню
 def main_menu(screen):
     clock = pygame.time.Clock()
     st_btn = pygame.image.load("Buttons/start_btn.png")
@@ -57,11 +65,12 @@ def main_menu(screen):
         pygame.display.update()
 
 
+# Функция окна с выбором уровня
 def lvl_page(screen):
     bg = pygame.image.load("Backgrounds/start_bg.jpg")
     screen.blit(bg, (0, 0))
 
-    # Buttons уровней
+    # Кнопки уровней
     level_1 = pygame.image.load("Buttons/lvl1.png")
     level_2 = pygame.image.load("Buttons/lvl2.png")
     level_3 = pygame.image.load("Buttons/lvl3.png")
@@ -101,10 +110,6 @@ def lvl_page(screen):
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if rect_back.collidepoint(event.pos):
                     main_menu(screen)
-
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if rect_level_1.collidepoint(event.pos):
-                    level1(screen)
 
         # Наводка на кнопки
         contour(screen, rect_level_1, 'Buttons/cl_lvl1.png', 'Buttons/lvl1.png')  # Кнопка уровня 1
