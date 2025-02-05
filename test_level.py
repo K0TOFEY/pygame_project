@@ -1,31 +1,22 @@
-import pygame
-import pytmx
 import sys
+import pygame
+
+from pytmx.util_pygame import load_pygame
 
 pygame.init()
-screen = pygame.display.set_mode((800, 600))
+screen = pygame.display.set_mode((800, 608))
 
+tmx_data = load_pygame('Tiledmap/tmx/test_map.tmx')
+print(tmx_data)
+print(tmx_data.layers)  # Все слои
 
-def level1(screen):
-    screen.fill("black")
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit()
 
-    tmx_data = pytmx.load_pygame('Map/level_1.tmx')
+        screen.fill('black')
+        pygame.display.update()
 
-    for layer in tmx_data.visible_layers:
-        if isinstance(layer, pytmx.TiledTileLayer):
-            for x, y, gid in layer:
-                tile = tmx_data.get_tile_image_by_gid(gid)
-                if tile:
-                    screen.blit(tile, (x * tmx_data.tilewidth, y * tmx_data.tileheight))
-
-        pygame.display.flip()
-#
-#
-# running = True
-# while running:
-#     for event in pygame.event.get():
-#         if event.type == pygame.QUIT:
-#             pygame.quit()
-#             sys.exit()
-#
-#     pygame.display.update()
