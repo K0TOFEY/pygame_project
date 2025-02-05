@@ -1,5 +1,6 @@
 import pygame
 import sys
+import numpy
 
 WIDTH = 800
 HEIGHT = 600
@@ -26,6 +27,7 @@ class Player(Sprite):  # Для персонажа
     def __init__(self, startx, starty):
         super().__init__("Froggo/Animation/frog.png", startx, starty)
         self.stand_image = self.image
+        self.jump_image = pygame.image.load('Froggo/Animation/jump.png')
 
         self.walk_cycle = [pygame.image.load(f"Froggo/Animation/walk_animation{i}.png") for i in range(1, 9)]
         self.animation_index = 0
@@ -36,9 +38,12 @@ class Player(Sprite):  # Для персонажа
         self.vsp = 0  # Вертикальная скорость
         self.gravity = 1
 
+        self.min_jumpspeed = 3
+        self.prev_key = pygame.key.get_pressed()
+
     def update(self, boxes):
         hsp = 0  # Горизонтальная скорость
-        on_ground = pygame.sprite.spritecollideany(self, boxes)
+        on_ground = self.check_collision(0, 0.8, boxes)
 
         # Проверка нажатия кнопки
         key = pygame.key.get_pressed()
@@ -58,15 +63,19 @@ class Player(Sprite):  # Для персонажа
 
         # Гравитация
         if self.vsp < 10 and not on_ground:
+            self.jump_animation()
             self.vsp += self.gravity
 
         if self.vsp > 0 and on_ground:
             self.vsp = 0
 
-        self.move(hsp, self.vsp)
+        self.move(hsp, self.vsp, boxes)
 
-    def move(self, x, y):
-        self.rect.move_ip([x, y])
+    def move(self, x, y, boxes):
+        dx = x
+        dy = y
+
+        self.rect.move_ip([dx, dy])
 
     def walk_animation(self):
         self.image = self.walk_cycle[self.animation_index]
@@ -77,6 +86,17 @@ class Player(Sprite):  # Для персонажа
             self.animation_index += 1
         else:
             self.animation_index = 0
+
+    def jump_animation(self):
+        self.image = self.jump_image
+        if self.facing_left:
+            self.image = pygame.transform.flip(self.image, True, False)
+
+    def check_collision(self, x, y, boxes):
+        self.rect.move_ip([x, y])
+        collide = pygame.sprite.spritecollideany(self, boxes)
+        self.rect.move_ip([-x, -y])
+        return collide
 
 
 class Box(Sprite):
@@ -94,6 +114,9 @@ def main():
     boxes = pygame.sprite.Group()
     for bx in range(0, 800, 32):
         boxes.add(Box(bx, 600))
+
+    boxes.add(Box(330, 568))
+    boxes.add(Box(100, 568))
 
     while True:
         for event in pygame.event.get():
