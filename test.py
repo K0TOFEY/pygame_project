@@ -75,6 +75,7 @@ class Player(Sprite):  # Для персонажа
         dx = x
         dy = y
 
+
         self.rect.move_ip([dx, dy])
 
     def walk_animation(self):
