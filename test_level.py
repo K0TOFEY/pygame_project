@@ -1,34 +1,28 @@
-import sys
 import pygame
+import pytmx
 
-from test_player import Player
+
+class Level():
+    pass
+
 
 pygame.init()
-screen = pygame.display.set_mode((800, 608))
+size = width, height = 800, 608
+screen = pygame.display.set_mode(size)
 
-player = Player()
 
 running = True
 while running:
+    # внутри игрового цикла ещё один цикл
+    # приема и обработки сообщений
     for event in pygame.event.get():
+        # при закрытии окна
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+            running = False
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_LEFT:
-                player.go_left()
-            if event.key == pygame.K_RIGHT:
-                player.go_right()
-            if event.key == pygame.K_UP:
-                player.jump()
+    # отрисовка и изменение свойств объектов
+    # ...
 
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_LEFT and player.change_x < 0:
-                player.stop()
-            if event.key == pygame.K_RIGHT and player.change_x > 0:
-                player.stop()
-
-        screen.fill('black')
-        pygame.display.update()
-
+    # обновление экрана
+    pygame.display.flip()
+pygame.quit()
