@@ -1,4 +1,10 @@
 import pygame
+import sys
+import pytmx
+
+WIDTH = 800
+HEIGHT = 608
+BACKGROUND = 'black'
 
 
 class Sprite(pygame.sprite.Sprite):
@@ -123,3 +129,102 @@ class Frog(Sprite):
 
     def on_ground(self):
         return self.onground
+
+
+class Brick(pygame.sprite.Sprite):  # Класс для кирпичей
+    def __init__(self, x, y, width, height):
+        super().__init__()
+        self.image = pygame.image.load('Sprites/brick_1.png')  # Загружаем текстуру
+        self.image = pygame.transform.scale(self.image, (width, height))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+
+class Map():
+    def __init__(self, filename):
+        self.tmx_data = pytmx.load_pygame(filename)
+        self.tile_width = self.tmx_data.tilewidth
+        self.tile_height = self.tmx_data.tileheight
+        self.width = self.tmx_data.width
+        self.height = self.tmx_data.height
+        self.layers = self.tmx_data.layers
+        self.brick_group = pygame.sprite.Group()  #  Группа спрайтов для кирпичей
+        self.collision_layer = self.tmx_data.get_layer_by_name('Tiles')  # или другое имя слоя с коллизиями
+        self.map_image = self.make_map()  # Создаем единое изображение карты
+        self.rect = self.map_image.get_rect()
+        self.rect.width = self.width * self.tile_width
+        self.rect.height = self.height * self.tile_height
+        self.Player = None
+        self.all_sprites = pygame.sprite.Group()
+
+    def make_map(self):
+        temp_surface = pygame.Surface((self.width * self.tile_width, self.height * self.tile_height))
+        for layer in self.layers:
+            if isinstance(layer, pytmx.TiledTileLayer):
+                for x, y, image in layer.tiles():  # Используем image вместо tile
+                    temp_surface.blit(image, (x * self.tile_width, y * self.tile_height))
+
+        # Создаем спрайты кирпичей
+        for obj in self.tmx_data.objects:
+            if obj.name == "Wall":
+                brick = Brick(obj.x, obj.y, obj.width, obj.height)
+                self.brick_group.add(brick)  #  Добавляем кирпич в группу
+
+        return temp_surface
+
+    def render(self, surface):
+        surface.blit(self.map_image, (0, 0))
+        for brick in self.brick_group: # Отрисовываем кирпичи
+            surface.blit(brick.image, brick.rect)
+
+    def get_collision(self):
+        return self.collision_layer
+
+    def view_player(self):
+        for obj in self.tmx_data.objects:
+            if obj.name == "Player":
+                self.Player = Frog(obj.x, obj.y, self.brick_group) # Передаем группу с кирпичами
+                self.Player.map = self  # Присваиваем ссылку на карту игроку
+                self.all_sprites.add(self.Player)
+                break
+
+
+def level1():
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    clock = pygame.time.Clock()
+
+    back = pygame.image.load("Buttons/back.png")
+    rect_back = back.get_rect(topleft=(10, 25))
+
+    game_map = Map("Tiledmap/tmx/test_map.tmx")
+    game_map.view_player()  # Создаем игрока после загрузки карты
+
+    player = game_map.Player  # Получаем ссылку на игрока из объекта карты
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if rect_back.collidepoint(event.pos):
+                    pass
+        clock.tick(60)
+
+        pygame.event.pump()
+        player.update()
+
+        # Рисуем
+        screen.fill(BACKGROUND)
+        game_map.render(screen)  # Отрисовываем карту и кирпичи
+        screen.blit(back, rect_back)
+        player.draw(screen)
+        # Обновляем
+        pygame.display.flip()
+
+
+if __name__ == "__main__":
+    level1()
