@@ -87,10 +87,6 @@ class Frog(Sprite):
         # Движение
         self.move(hsp, self.vsp)
 
-        # Анимация прыжка
-        if self.is_jumping and not self.onground:  # Если прыгаем, то проигрываем анимацию падения
-            self.jump_animation()
-
     def move(self, x, y):
         # Горизонтальное движение
         self.rect.x += x
