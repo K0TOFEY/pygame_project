@@ -4,7 +4,7 @@ import pytmx
 
 
 # Вспомогательные функции
-def contour(screen, rect, first_file, second_file):
+def contour(screen, rect, first_file, second_file):  # Наводка на кнопку
     if rect.collidepoint(pygame.mouse.get_pos()):
         btn = pygame.image.load(f"{first_file}")
         screen.blit(btn, rect)
@@ -18,56 +18,56 @@ class Sprite(pygame.sprite.Sprite):
     def __init__(self, image, startx, starty):
         super().__init__()
 
-        self.image = pygame.image.load(image)
-        self.rect = self.image.get_rect()
+        self.image = pygame.image.load(image)  # Загрузка изображения
+        self.rect = self.image.get_rect()  # Rect этого изображения
 
-        self.rect.center = [startx, starty]
+        self.rect.center = [startx, starty]  # Центр rect размещаем на стартовых координатах
 
-    def update(self):
+    def update(self):  # Пустая функция апдейта
         pass
 
-    def draw(self, screen):
+    def draw(self, screen):  # Функция рисования спрайта
         screen.blit(self.image, self.rect)
 
 
 # Класс персонажа
 class Frog(Sprite):
     def __init__(self, startx, starty, brick_group):
-        super().__init__("Froggo/Animation/frog.png", startx, starty)
-        self.stand_image = self.image
-        self.jump_image = pygame.image.load('Froggo/Animation/jump.png')
+        super().__init__("Froggo/Animation/frog.png", startx, starty)  # Наследование от класса Sprite
+        self.stand_image = self.image  # Изображение персонажа
+        self.jump_image = pygame.image.load('Froggo/Animation/jump.png')  # Изображение персонажа в прыжке
 
+        # Анимация ходьбы
         self.walk_cycle = [pygame.image.load(f"Froggo/Animation/walk_animation{i}.png") for i in range(1, 9)]
         self.animation_index = 0
-        self.facing_left = False
 
-        self.speed = 4
-        self.jump_speed = -20  # Изменили знак, чтобы прыжок был вверх
+        self.facing_left = False  # Смотрит ли наш персонаж в левую сторону
+
+        self.speed = 4  # Скорость игрока
+        self.jump_speed = -20  # Скорость игрока в прыжке
         self.vsp = 0  # Вертикальная скорость
         self.gravity = 1  # Уменьшили гравитацию
 
-        self.onground = False
+        self.onground = False  # Проверка на наличие земли под ногами
 
-        self.min_jumpspeed = 3
-        self.prev_key = pygame.key.get_pressed()
+        self.prev_key = pygame.key.get_pressed()  # Какую кнопку нажал
         self.map = None  # Добавлено поле для хранения ссылки на карту
         self.brick_group = brick_group  # Спрайт группа кирпичей
-        self.is_jumping = False
 
     def update(self):
         hsp = 0  # Горизонтальная скорость
 
         # Проверка нажатия кнопки
         key = pygame.key.get_pressed()
-        if key[pygame.K_LEFT]:
+        if key[pygame.K_LEFT]:  # Если стрелочка влево
             self.facing_left = False
             self.walk_animation()
             hsp = -self.speed
-        elif key[pygame.K_RIGHT]:
+        elif key[pygame.K_RIGHT]:  # Если стрелочка вправо
             self.facing_left = True
             self.walk_animation()
             hsp = self.speed
-        else:
+        else:  # Просто стоит
             self.image = self.stand_image
 
         # Прыжок
@@ -78,12 +78,14 @@ class Frog(Sprite):
         # Проигрывание анимации прыжка
         if self.vsp < 10 and not self.onground:
             self.jump_animation()
+
         # Гравитация
         self.vsp += self.gravity
 
         # Ограничение скорости падения
         if self.vsp > 10:
             self.vsp = 10
+
         # Движение
         self.move(hsp, self.vsp)
 
@@ -96,10 +98,10 @@ class Frog(Sprite):
             if self.rect.colliderect(brick.rect):
                 if x > 0:  # Движемся вправо
                     self.rect.right = brick.rect.left  # Прижимаемся к левой стороне кирпича
-                    x = 0 # убираем движение, если столкнулись
+                    x = 0  # убираем движение, если столкнулись
                 elif x < 0:  # Движемся влево
                     self.rect.left = brick.rect.right  # Прижимаемся к правой стороне кирпича
-                    x = 0 # убираем движение, если столкнулись
+                    x = 0  # убираем движение, если столкнулись
 
         # Вертикальное движение
         self.rect.y += y
@@ -115,24 +117,24 @@ class Frog(Sprite):
                 elif y < 0:  # Прыгаем вверх
                     self.rect.top = brick.rect.bottom  # Прижимаемся к нижней стороне кирпича
                     self.vsp = 0  # Гасим скорость
-                    y = 0 # Убираем движение, если столкнулись
+                    y = 0  # Убираем движение, если столкнулись
 
-    def walk_animation(self):
-        self.image = self.walk_cycle[self.animation_index]
-        if self.facing_left:
-            self.image = pygame.transform.flip(self.image, True, False)
+    def walk_animation(self):  # Анимация ходьбы
+        self.image = self.walk_cycle[self.animation_index]  # Присваиваем персонажу картинку из цикла анимации ходьбы
+        if self.facing_left:  # Проверяем поворот налево
+            self.image = pygame.transform.flip(self.image, True, False)  # Зеркалим
 
-        if self.animation_index < len(self.walk_cycle) - 1:
+        if self.animation_index < len(self.walk_cycle) - 1:  # Меняем индекс картинки с анимацией
             self.animation_index += 1
         else:
             self.animation_index = 0
 
-    def jump_animation(self):
-        self.image = self.jump_image
-        if self.facing_left:
-            self.image = pygame.transform.flip(self.image, True, False)
+    def jump_animation(self):  # Анимация прыжка
+        self.image = self.jump_image   # Присваиваем персонажу картинку персонажа в прыжке
+        if self.facing_left:  # Проверяем поворот налево
+            self.image = pygame.transform.flip(self.image, True, False)  # Зеркалим
 
-    def on_ground(self):
+    def on_ground(self):  # Проверка на нахождение на земле
         return self.onground
 
 
@@ -141,59 +143,59 @@ class Brick(pygame.sprite.Sprite):  # Класс для кирпичей
     def __init__(self, x, y, width, height):
         super().__init__()
         self.image = pygame.image.load('Sprites/brick_1.png')  # Загружаем текстуру
-        self.image = pygame.transform.scale(self.image, (width, height))
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
+        self.image = pygame.transform.scale(self.image, (width, height))  # Меняем размер текстуры
+        self.rect = self.image.get_rect()  # Получаем rect текстуры
+        self.rect.x = x  # Указываем х rect
+        self.rect.y = y  # Указываем y rect
 
 
 # Класс уровней
 class Map():
     def __init__(self, filename):
-        self.tmx_data = pytmx.load_pygame(filename)
-        self.tile_width = self.tmx_data.tilewidth
-        self.tile_height = self.tmx_data.tileheight
-        self.width = self.tmx_data.width
-        self.height = self.tmx_data.height
-        self.layers = self.tmx_data.layers
+        self.tmx_data = pytmx.load_pygame(filename)  # Загружаем карту
+        self.tile_width = self.tmx_data.tilewidth  # Получаем длину тайла
+        self.tile_height = self.tmx_data.tileheight  # Получаем высоту тайла
+        self.width = self.tmx_data.width  # Получаем длину карты в тайлах
+        self.height = self.tmx_data.height  # Получаем высоту карты в тайлах
+        self.layers = self.tmx_data.layers  # Получаем слои карты
         self.brick_group = pygame.sprite.Group()  # Группа спрайтов для кирпичей
-        self.collision_layer = self.tmx_data.get_layer_by_name('Tiles')  # или другое имя слоя с коллизиями
+        self.collision_layer = self.tmx_data.get_layer_by_name('Tiles')  # Имя слоя, где происходит столкновение игрока с блоками
         self.map_image = self.make_map()  # Создаем единое изображение карты
-        self.rect = self.map_image.get_rect()
-        self.rect.width = self.width * self.tile_width
-        self.rect.height = self.height * self.tile_height
-        self.Player = None
-        self.all_sprites = pygame.sprite.Group()
+        self.rect = self.map_image.get_rect()  # Получаем rect карты
+        self.rect.width = self.width * self.tile_width  # Получаем длину rect карты в пикселях
+        self.rect.height = self.height * self.tile_height  # Получаем высоту rect карты в пикселях
+        self.Player = None  # Игрок
+        self.all_sprites = pygame.sprite.Group()  # Все спрайты
 
-    def make_map(self):
-        temp_surface = pygame.Surface((self.width * self.tile_width, self.height * self.tile_height))
-        for layer in self.layers:
-            if isinstance(layer, pytmx.TiledTileLayer):
-                for x, y, image in layer.tiles():  # Используем image вместо tile
-                    temp_surface.blit(image, (x * self.tile_width, y * self.tile_height))
+    def make_map(self):  # Выведение карты на экран
+        temp_surface = pygame.Surface((self.width * self.tile_width, self.height * self.tile_height))  # Создаём новую поверхность
+        for layer in self.layers:  # Перебираем слои
+            if isinstance(layer, pytmx.TiledTileLayer):  # Является ли этот слой слоем с тайлами
+                for x, y, image in layer.tiles():  # Получаем x, y, картинку тайла
+                    temp_surface.blit(image, (x * self.tile_width, y * self.tile_height))  # Рисуем
 
         # Создаем спрайты кирпичей
-        for obj in self.tmx_data.objects:
-            if obj.name == "Wall":
-                brick = Brick(obj.x, obj.y, obj.width, obj.height)
-                self.brick_group.add(brick)  #  Добавляем кирпич в группу
+        for obj in self.tmx_data.objects:  # Перебираем объекты
+            if obj.name == "Wall":  # Если объект называется Wall
+                brick = Brick(obj.x, obj.y, obj.width, obj.height)  # Передаём данные в класс блока
+                self.brick_group.add(brick)  # Добавляем кирпич в группу
 
         return temp_surface
 
-    def render(self, surface):
+    def render(self, surface):  # Рисуем кирпичики
         surface.blit(self.map_image, (0, 0))
-        for brick in self.brick_group: # Отрисовываем кирпичи
-            surface.blit(brick.image, brick.rect)
+        for brick in self.brick_group:  # Перебираем кирпичики
+            surface.blit(brick.image, brick.rect)  # Рисуем
 
-    def get_collision(self):
+    def get_collision(self):  # Проверяем столкновение
         return self.collision_layer
 
-    def view_player(self):
-        for obj in self.tmx_data.objects:
-            if obj.name == "Player":
-                self.Player = Frog(obj.x, obj.y, self.brick_group) # Передаем группу с кирпичами
+    def view_player(self):  # Отображаем игрока
+        for obj in self.tmx_data.objects:  # Перебираем объекты
+            if obj.name == "Player":  # Если объект называется Player
+                self.Player = Frog(obj.x, obj.y, self.brick_group)  # Передаём данные в класс персонажа
                 self.Player.map = self  # Присваиваем ссылку на карту игроку
-                self.all_sprites.add(self.Player)
+                self.all_sprites.add(self.Player)  # Добавляем в группу всех спрайтов
                 break
 
 
@@ -320,7 +322,7 @@ def level1(screen):
     rect_back = back.get_rect(topleft=(10, 25))
 
     game_map = Map("Tiledmap/tmx/test_map.tmx")
-    game_map.view_player()  # Cоздаем игрока после загрузки карты
+    game_map.view_player()  # Cоздаём игрока после загрузки карты
 
     player = game_map.Player  # Получаем ссылку на игрока из объекта карты
 
@@ -346,8 +348,8 @@ def level1(screen):
         # Рисуем
         screen.fill(BACKGROUND)
         game_map.render(screen)  # Отрисовываем карту и кирпичи
-        screen.blit(back, rect_back)
-        player.draw(screen)
+        screen.blit(back, rect_back)  # Кнопка назад
+        player.draw(screen)  # Отрисовываем игрока
         # Обновляем
         pygame.display.flip()
 
