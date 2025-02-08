@@ -73,8 +73,9 @@ class Frog(Sprite):
         # Прыжок
         if key[pygame.K_UP] and self.onground:  # Прыгаем, только если на земле
             self.vsp = self.jump_speed
-            self.onground = False  # Сбрасываем флаг, так как игрок прыгнул
+            self.onground = False
 
+        # Проигрывание анимации прыжка
         if self.vsp < 10 and not self.onground:
             self.jump_animation()
         # Гравитация
