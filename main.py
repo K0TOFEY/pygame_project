@@ -3,6 +3,7 @@ import sys
 import pytmx
 import random
 
+
 # Вспомогательные функции
 def contour(screen, rect, first_file, second_file):  # Наводка на кнопку
     if rect.collidepoint(pygame.mouse.get_pos()):
@@ -20,6 +21,7 @@ def play_random_music():  # Проигрыш музыки в меню
         pygame.mixer.music.play()
         pygame.mixer.music.set_volume(0.5)
         current_music = next_music
+
 
 # Класс любого спрайта
 class Sprite(pygame.sprite.Sprite):
@@ -215,16 +217,17 @@ def main_menu(screen):
     qt_btn = pygame.image.load("Buttons/quit_btn.png")
 
     # Фон
-    bg = pygame.image.load("Backgrounds/start_bg.jpg")
+    bg = pygame.image.load(BACKGROUND_FOR_MENU)
+    bg = pygame.transform.flip(bg, True, False)
     screen.blit(bg, (0, 0))
 
     # Buttons
-    st_btn_rect = st_btn.get_rect(topleft=(275, 250))
-    qt_btn_rect = qt_btn.get_rect(topleft=(275, 350))
+    st_btn_rect = st_btn.get_rect(topleft=(100, 250))
+    qt_btn_rect = qt_btn.get_rect(topleft=(100, 350))
 
     # Работа над текстом
-    font = pygame.font.Font(None, 52)
-    text = font.render("Проклятие лягушачьего рыцаря", True, (255, 0, 0))
+    font = pygame.font.Font(None, 52)  # Создаём шрифт
+    text = font.render("Проклятие лягушачьего рыцаря", True, (255, 255, 255))
     text_x = 125
     text_y = 125
 
@@ -269,7 +272,8 @@ def main_menu(screen):
 # Функция окна с выбором уровня
 def lvl_page(screen):
     global current_music
-    bg = pygame.image.load("Backgrounds/start_bg.jpg")
+    bg = pygame.image.load(BACKGROUND_FOR_MENU)
+    bg = pygame.transform.flip(bg, True, False)
     screen.blit(bg, (0, 0))
 
     # Кнопки уровней
@@ -284,7 +288,7 @@ def lvl_page(screen):
     rect_level_3 = level_3.get_rect(topleft=(550, 250))
     rect_back = back.get_rect(topleft=(10, 45))
 
-    # текст
+    # Текст
     font = pygame.font.Font(None, 64)
     text = font.render("Выберите уровень", True, (255, 0, 0))
     text_x = 200
@@ -391,8 +395,9 @@ clock = pygame.time.Clock()
 
 # Константы
 WIDTH = 800  # Длина окна
-HEIGHT = 608  # Высота окна
+HEIGHT = 600  # Высота окна
 BACKGROUND = 'black'  # Чёрный цвет для заднего фона
+BACKGROUND_FOR_MENU = 'Backgrounds/menu_bg.jpg'
 MUSIC_ON_LEVEL = 'Sounds/dungeoun_music.mp3'
 
 # Список музыки для меню
