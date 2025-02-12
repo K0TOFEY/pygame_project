@@ -1,7 +1,7 @@
 import pygame
 import sys
 import pytmx
-
+import random
 
 # Вспомогательные функции
 def contour(screen, rect, first_file, second_file):  # Наводка на кнопку
@@ -12,6 +12,14 @@ def contour(screen, rect, first_file, second_file):  # Наводка на кн�
         btn = pygame.image.load(f"{second_file}")
         screen.blit(btn, rect)
 
+def play_random_music():  # Проигрыш музыки в меню
+    global current_music
+    next_music = random.choice(MENU_MUSIC)
+    if next_music != current_music:
+        pygame.mixer.music.load(next_music)
+        pygame.mixer.music.play()
+        pygame.mixer.music.set_volume(0.5)
+        current_music = next_music
 
 # Класс любого спрайта
 class Sprite(pygame.sprite.Sprite):
@@ -201,6 +209,7 @@ class Map():
 
 # Функция главного меню
 def main_menu(screen):
+    global current_music
     clock = pygame.time.Clock()
     st_btn = pygame.image.load("Buttons/start_btn.png")
     qt_btn = pygame.image.load("Buttons/quit_btn.png")
@@ -214,11 +223,10 @@ def main_menu(screen):
     qt_btn_rect = qt_btn.get_rect(topleft=(275, 350))
 
     # Работа над текстом
-    text_surf = pygame.Surface((350, 25))
-    font = pygame.font.Font(None, 64)
-    text = font.render("Название игры такое-то", True, (255, 0, 0))
+    font = pygame.font.Font(None, 52)
+    text = font.render("Проклятие лягушачьего рыцаря", True, (255, 0, 0))
     text_x = 125
-    text_y = 50
+    text_y = 125
 
     # рисование на холсте
     screen.blit(text, (text_x, text_y))
@@ -237,10 +245,12 @@ def main_menu(screen):
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if st_btn_rect.collidepoint(event.pos):
+                    SOUND_ON_BUTTON.play()
                     lvl_page(screen)
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if qt_btn_rect.collidepoint(event.pos):
+                    SOUND_ON_BUTTON.play()
                     pygame.quit()
                     sys.exit()
 
@@ -251,9 +261,14 @@ def main_menu(screen):
 
         pygame.display.update()
 
+        # Проверяем, закончилась ли музыка, и если да, то включаем следующую
+        if not pygame.mixer.music.get_busy():
+            play_random_music()
+
 
 # Функция окна с выбором уровня
 def lvl_page(screen):
+    global current_music
     bg = pygame.image.load("Backgrounds/start_bg.jpg")
     screen.blit(bg, (0, 0))
 
@@ -296,12 +311,13 @@ def lvl_page(screen):
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if rect_back.collidepoint(event.pos):
+                    SOUND_ON_BUTTON.play()
                     main_menu(screen)
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if rect_level_1.collidepoint(event.pos):
+                    SOUND_ON_BUTTON.play()
                     level1(screen)
-
 
         # Наводка на кнопки
         contour(screen, rect_level_1, 'Buttons/cl_lvl1.png', 'Buttons/lvl1.png')  # Кнопка уровня 1
@@ -314,10 +330,21 @@ def lvl_page(screen):
 
         pygame.display.update()
 
+        # Проверяем, закончилась ли музыка, и если да, то включаем следующую
+        if not pygame.mixer.music.get_busy():
+            play_random_music()
+
 
 # Функции уровней
 # -------------- Функция уровня 1
 def level1(screen):
+    global level1_music
+    global level1_music_playing
+    level1_music_playing = True  # Флаг на то что уровень запущен и играет данная музыка
+
+    pygame.mixer.music.load(MUSIC_ON_LEVEL)  # Загрузка музыки для уровня
+    pygame.mixer.music.play(-1)  # Запуск музыки, -1 означает бесконечный повтор
+
     back = pygame.image.load("Buttons/back.png")
     rect_back = back.get_rect(topleft=(10, 25))
 
@@ -326,14 +353,17 @@ def level1(screen):
 
     player = game_map.Player  # Получаем ссылку на игрока из объекта карты
 
-    while True:
+    while level1_music_playing: # Тоже самое, что while running, где running = True, но чтоб упростить сделаем так
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # если мы решим вдруг выйти
                 if rect_back.collidepoint(event.pos):
+                    SOUND_ON_BUTTON.play()
+                    pygame.mixer.music.stop()  # Останавливаем музыку уровня
+                    level1_music_playing = False
                     lvl_page(screen)
 
         # Наводка на кнопку
@@ -360,13 +390,33 @@ def level1(screen):
 clock = pygame.time.Clock()
 
 # Константы
-WIDTH = 800
-HEIGHT = 608
-BACKGROUND = 'black'
+WIDTH = 800  # Длина окна
+HEIGHT = 608  # Высота окна
+BACKGROUND = 'black'  # Чёрный цвет для заднего фона
+MUSIC_ON_LEVEL = 'Sounds/dungeoun_music.mp3'
+
+# Список музыки для меню
+MENU_MUSIC = [
+    'Sounds/menu_music1.mp3',
+    'Sounds/menu_music2.mp3',
+    'Sounds/menu_music3.mp3'
+]
+
+# Инициализация Pygame Mixer (звук)
+pygame.mixer.init()
+SOUND_ON_BUTTON = pygame.mixer.Sound("Sounds/click_on_button.mp3")  # Звук для нажатия кнопки
+pygame.mixer.music.set_volume(1)  # Громкость трека 100%
 
 # Создание окна
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
+# Переменная для текущей музыки
+# Запоминает текущий играющий трек, чтобы избежать повторного воспроизведения одного и того же трека подряд
+current_music = None
+
+# Запускаем первую музыку при запуске игры
+play_random_music()
 
 # Меню игры
 main_menu(screen)
