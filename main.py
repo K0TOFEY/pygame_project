@@ -43,7 +43,7 @@ class Sprite(pygame.sprite.Sprite):
 
 # Класс персонажа
 class Frog(Sprite):
-    def __init__(self, startx, starty, brick_group, spike_group):  # Принимаем spike_group
+    def __init__(self, startx, starty, brick_group, spike_group, coin_group):  # Принимаем spike_group
         super().__init__("Froggo/Animation/frog.png", startx, starty)
         self.stand_image = self.image
         self.jump_image = pygame.image.load('Froggo/Animation/jump.png')
@@ -65,6 +65,7 @@ class Frog(Sprite):
         self.map = None  # Добавлено поле для хранения ссылки на карту
         self.brick_group = brick_group  # Спрайт группа кирпичей
         self.spike_group = spike_group  # Сохраняем ссылку на группу шипов
+        self.coin_group = coin_group
         self.is_jumping = False
         self.dying = False  # Флаг, показывающий, что началась анимация смерти
         self.death_start_time = 0  # Время начала анимации смерти
@@ -216,6 +217,26 @@ class Spike(pygame.sprite.Sprite):  # Класс для шипов
         self.rect.y = y
 
 
+class Money(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load('Money/money_animation1.png')  # Загружаем текстуру Монеты
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        self.coin_cycle = [pygame.image.load(f"Money/money_animation{i}.png") for i in range(1, 6)]
+        self.animation_index = 0
+        self.last_update = pygame.time.get_ticks()
+        self.animation_cooldown = 100 # 100 ms между кадрами
+
+    def update(self):
+        now = pygame.time.get_ticks()
+        if now - self.last_update > self.animation_cooldown:
+            self.last_update = now
+            self.animation_index = (self.animation_index + 1) % len(self.coin_cycle)
+            self.image = self.coin_cycle[self.animation_index]
+
+
 # Класс уровней
 class Map():
     def __init__(self, filename):
@@ -225,8 +246,9 @@ class Map():
         self.width = self.tmx_data.width
         self.height = self.tmx_data.height
         self.layers = self.tmx_data.layers
-        self.brick_group = pygame.sprite.Group()  # Группа спрайтов для кирпичей
-        self.spike_group = pygame.sprite.Group()  # Группа спрайтов для шипов
+        self.brick_group = pygame.sprite.Group()  #  Группа спрайтов для кирпичей
+        self.spike_group = pygame.sprite.Group()  #  Группа спрайтов для шипов
+        self.coin_group = pygame.sprite.Group()  #  Группа спрайтов для монет
         self.all_sprites = pygame.sprite.Group()
         self.collision_layer = self.tmx_data.get_layer_by_name('Tiles')  # или другое имя слоя с коллизиями
         self.map_image = self.make_map()  # Создаем единое изображение карты
@@ -246,20 +268,26 @@ class Map():
         for obj in self.tmx_data.objects:
             if obj.name == "Wall":
                 brick = Brick(obj.x, obj.y, obj.width, obj.height)
-                self.brick_group.add(brick)  # Добавляем кирпич в группу
+                self.brick_group.add(brick)  #  Добавляем кирпич в группу
             elif obj.name == "Spike":
                 spike = Spike(obj.x, obj.y, obj.width, obj.height)  # Создаем шип
                 self.spike_group.add(spike)  # Добавляем шип в группу шипов
                 self.all_sprites.add(spike)  # Добавляем шип в группу всех спрайтов
+            elif obj.name == "Coin":
+                coin = Money(obj.x, obj.y)
+                self.coin_group.add(coin)
+                self.all_sprites.add(coin)
 
         return temp_surface
 
     def render(self, surface):
         surface.blit(self.map_image, (0, 0))
         for brick in self.brick_group: # Отрисовываем кирпичи
-            surface.blit(brick.image, brick.rect)
+            surface.blit(brick.image, brick.rect)  # Рисуем
         for spike in self.spike_group:  # Отрисовываем шипы
             surface.blit(spike.image, spike.rect)
+        for coin in self.coin_group:
+            surface.blit(coin.image, coin.rect) # Отрисовываем монеты
 
     def get_collision(self):
         return self.collision_layer
@@ -267,7 +295,7 @@ class Map():
     def view_player(self):
         for obj in self.tmx_data.objects:
             if obj.name == "Player":
-                self.Player = Frog(obj.x, obj.y, self.brick_group, self.spike_group)  # Передаем группу с кирпичами и шипами
+                self.Player = Frog(obj.x, obj.y, self.brick_group, self.spike_group, self.coin_group)  # Передаем группу с кирпичами и шипами
                 self.Player.map = self  # Присваиваем ссылку на карту игроку
                 self.all_sprites.add(self.Player)
                 break
@@ -465,6 +493,8 @@ def level1(screen):
         game_map.render(screen)  # Отрисовываем карту и кирпичи
         screen.blit(back, rect_back)  # Кнопка назад
         player.draw(screen)  # Отрисовываем игрока
+        for coin in game_map.coin_group:
+            coin.update() # анимация монет
         # Обновляем
         pygame.display.flip()
 
@@ -581,7 +611,8 @@ BACKGROUND = 'black'  # Чёрный цвет для заднего фона
 BACKGROUND_FOR_MENU = 'Backgrounds/menu_bg.jpg'
 MUSIC_ON_LEVEL = 'Sounds/dungeoun_music.mp3'
 DEATH_ANIMATION_DURATION = 1  # Длительность анимации смерти в секундах
-DEATH_FRAMES = 8 # Кол-во кадров смерти
+DEATH_FRAMES = 8  # Кол-во кадров смерти
+COIN_ANIMATION_SPEED = 0.2  # Скорость анимации монет
 
 
 # Список музыки для меню
