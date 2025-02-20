@@ -190,6 +190,7 @@ class Map():
                 break
 
 
+# тестовый первый уровень
 def level1():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -226,5 +227,78 @@ def level1():
         pygame.display.flip()
 
 
+# тестовый второй уровень
+def level2():
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    clock = pygame.time.Clock()
+
+    back = pygame.image.load("Buttons/back.png")
+    rect_back = back.get_rect(topleft=(10, 25))
+
+    game_map = Map("Tiledmap/tmx/test_map2.tmx")
+    game_map.view_player()  # Создаем игрока после загрузки карты
+
+    player = game_map.Player  # Получаем ссылку на игрока из объекта карты
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if rect_back.collidepoint(event.pos):
+                    pass
+        clock.tick(60)
+
+        pygame.event.pump()
+        player.update()
+
+        # Рисуем
+        screen.fill(BACKGROUND)
+        game_map.render(screen)  # Отрисовываем карту и кирпичи
+        screen.blit(back, rect_back)
+        player.draw(screen)
+        # Обновляем
+        pygame.display.flip()
+
+
+def level3():
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    clock = pygame.time.Clock()
+
+    back = pygame.image.load("Buttons/back.png")
+    rect_back = back.get_rect(topleft=(10, 25))
+
+    game_map = Map("Tiledmap/tmx/test_map3.tmx")
+    game_map.view_player()  # Создаем игрока после загрузки карты
+
+    player = game_map.Player  # Получаем ссылку на игрока из объекта карты
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if rect_back.collidepoint(event.pos):
+                    pass
+        clock.tick(60)
+
+        pygame.event.pump()
+        player.update()
+
+        # Рисуем
+        screen.fill(BACKGROUND)
+        game_map.render(screen)  # Отрисовываем карту и кирпичи
+        screen.blit(back, rect_back)
+        player.draw(screen)
+        # Обновляем
+        pygame.display.flip()
+
+
 if __name__ == "__main__":
-    level1()
+    level3()

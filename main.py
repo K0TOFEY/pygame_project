@@ -323,6 +323,16 @@ def lvl_page(screen):
                     SOUND_ON_BUTTON.play()
                     level1(screen)
 
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if rect_level_2.collidepoint(event.pos):
+                    SOUND_ON_BUTTON.play()
+                    level2(screen)
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if rect_level_3.collidepoint(event.pos):
+                    SOUND_ON_BUTTON.play()
+                    level3(screen)
+
         # Наводка на кнопки
         contour(screen, rect_level_1, 'Buttons/cl_lvl1.png', 'Buttons/lvl1.png')  # Кнопка уровня 1
 
@@ -357,7 +367,118 @@ def level1(screen):
 
     player = game_map.Player  # Получаем ссылку на игрока из объекта карты
 
-    while level1_music_playing: # Тоже самое, что while running, где running = True, но чтоб упростить сделаем так
+    level1_music_playing
+    while level1_music_playing:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # если мы решим вдруг выйти
+                if rect_back.collidepoint(event.pos):
+                    SOUND_ON_BUTTON.play()
+                    pygame.mixer.music.stop()  # Останавливаем музыку уровня
+                    level1_music_playing = False
+                    lvl_page(screen)
+
+        # Проверка достижения конца уровня
+        if player.rect.right >= WIDTH:
+            pygame.mixer.music.stop()  # Останавливаем музыку уровня
+            level1_music_playing = False
+            level2(screen)
+            return
+
+        # Наводка на кнопку
+        contour(screen, rect_back, 'Buttons/cl_back.png', 'Buttons/back.png')
+        pygame.display.update()
+
+        clock.tick(60)
+
+        pygame.event.pump()
+        player.update()
+
+        # Рисуем
+        screen.fill(BACKGROUND)
+        game_map.render(screen)  # Отрисовываем карту и кирпичи
+        screen.blit(back, rect_back)  # Кнопка назад
+        player.draw(screen)  # Отрисовываем игрока
+        # Обновляем
+        pygame.display.flip()
+
+
+# -------------- Функция уровня 2
+def level2(screen):
+    global level1_music
+    global level1_music_playing
+    level1_music_playing = True  # Флаг на то что уровень запущен и играет данная музыка
+
+    pygame.mixer.music.load(MUSIC_ON_LEVEL)  # Загрузка музыки для уровня
+    pygame.mixer.music.play(-1)  # Запуск музыки, -1 означает бесконечный повтор
+
+    back = pygame.image.load("Buttons/back.png")
+    rect_back = back.get_rect(topleft=(10, 25))
+
+    game_map = Map("Tiledmap/tmx/test_map2.tmx")
+    game_map.view_player()  # Cоздание игрока после загрузки карты
+
+    player = game_map.Player  # Получаем ссылку на игрока из объекта карты
+
+    while level1_music_playing:  # Тоже самое, что while running, где running = True, но чтоб упростить сделаем так
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # если мы решим вдруг выйти
+                if rect_back.collidepoint(event.pos):
+                    SOUND_ON_BUTTON.play()
+                    pygame.mixer.music.stop()  # Останавливаем музыку уровня
+                    level1_music_playing = False
+                    lvl_page(screen)
+
+        # Проверка достижения конца уровня
+        if player.rect.right >= WIDTH:
+            pygame.mixer.music.stop()  # Останавливаем музыку уровня
+            level1_music_playing = False
+            level3(screen)
+            return
+
+        # Наводка на кнопку
+        contour(screen, rect_back, 'Buttons/cl_back.png', 'Buttons/back.png')
+        pygame.display.update()
+
+        clock.tick(60)
+
+        pygame.event.pump()
+        player.update()
+
+        # Рисуем
+        screen.fill(BACKGROUND)
+        game_map.render(screen)  # Отрисовываем карту и кирпичи
+        screen.blit(back, rect_back)  # Кнопка назад
+        player.draw(screen)  # Отрисовываем игрока
+        # Обновляем
+        pygame.display.flip()
+
+
+# -------------- Функция уровня 3
+def level3(screen):
+    global level1_music
+    global level1_music_playing
+    level1_music_playing = True  # Флаг на то что уровень запущен и играет данная музыка
+
+    pygame.mixer.music.load(MUSIC_ON_LEVEL)  # Загрузка музыки для уровня
+    pygame.mixer.music.play(-1)  # Запуск музыки, -1 означает бесконечный повтор
+
+    back = pygame.image.load("Buttons/back.png")
+    rect_back = back.get_rect(topleft=(10, 25))
+
+    game_map = Map("Tiledmap/tmx/test_map3.tmx")
+    game_map.view_player()  # Cоздание игрока после загрузки карты
+
+    player = game_map.Player  # Получаем ссылку на игрока из объекта карты
+
+    while level1_music_playing:  # Тоже самое, что while running, где running = True, но чтоб упростить сделаем так
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -388,9 +509,6 @@ def level1(screen):
         pygame.display.flip()
 
 
-# -------------- Последующие уровни
-
-
 clock = pygame.time.Clock()
 
 # Константы
@@ -417,7 +535,7 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
 # Переменная для текущей музыки
-# Запоминает текущий играющий трек, чтобы избежать повторного воспроизведения одного и того же трека подряд
+# Запоменает текущий играющий трек, чтобы избежать повторного воспроизведения одного и того же трека подряд
 current_music = None
 
 # Запускаем первую музыку при запуске игры
