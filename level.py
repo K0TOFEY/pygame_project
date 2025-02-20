@@ -24,7 +24,7 @@ class Sprite(pygame.sprite.Sprite):
 
 
 class Frog(Sprite):
-    def __init__(self, startx, starty, brick_group):
+    def __init__(self, startx, starty, brick_group, spike_group): #  Принимаем spike_group
         super().__init__("Froggo/Animation/frog.png", startx, starty)
         self.stand_image = self.image
         self.jump_image = pygame.image.load('Froggo/Animation/jump.png')
@@ -44,6 +44,7 @@ class Frog(Sprite):
         self.prev_key = pygame.key.get_pressed()
         self.map = None  # Добавлено поле для хранения ссылки на карту
         self.brick_group = brick_group  # Спрайт группа кирпичей
+        self.spike_group = spike_group # Сохраняем ссылку на группу шипов
         self.is_jumping = False
 
     def update(self):
@@ -91,10 +92,10 @@ class Frog(Sprite):
             if self.rect.colliderect(brick.rect):
                 if x > 0:  # Движемся вправо
                     self.rect.right = brick.rect.left  # Прижимаемся к левой стороне кирпича
-                    x = 0 # убираем движение, если столкнулись
+                    x = 0  # убираем движение, если столкнулись
                 elif x < 0:  # Движемся влево
                     self.rect.left = brick.rect.right  # Прижимаемся к правой стороне кирпича
-                    x = 0 # убираем движение, если столкнулись
+                    x = 0  # убираем движение, если столкнулись
 
         # Вертикальное движение
         self.rect.y += y
@@ -110,7 +111,12 @@ class Frog(Sprite):
                 elif y < 0:  # Прыгаем вверх
                     self.rect.top = brick.rect.bottom  # Прижимаемся к нижней стороне кирпича
                     self.vsp = 0  # Гасим скорость
-                    y = 0 # Убираем движение, если столкнулись
+                    y = 0  # Убираем движение, если столкнулись
+
+        # Проверка столкновений с шипами
+        for spike in self.spike_group:
+            if self.rect.colliderect(spike.rect):
+                self.spike_collision()  # Вызываем метод столкновения с шипами
 
     def walk_animation(self):
         self.image = self.walk_cycle[self.animation_index]
@@ -130,12 +136,27 @@ class Frog(Sprite):
     def on_ground(self):
         return self.onground
 
+    def spike_collision(self):
+        print("Персонаж умер!")  # Выводим сообщение в консоль
+        pygame.quit()
+        sys.exit()
 
-class Brick(pygame.sprite.Sprite):  # Класс для кирпичей
+
+class Brick(pygame.sprite.Sprite): # Класс для кирпичей
     def __init__(self, x, y, width, height):
         super().__init__()
         self.image = pygame.image.load('Sprites/brick_1.png')  # Загружаем текстуру
         self.image = pygame.transform.scale(self.image, (width, height))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+
+class Spike(pygame.sprite.Sprite):  # Класс для шипов
+    def __init__(self, x, y, width, height):
+        super().__init__()
+        self.image = pygame.image.load('Sprites/spike.png')  # Загружаем текстуру шипа
+        self.image = pygame.transform.scale(self.image, (32, 32))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -149,14 +170,15 @@ class Map():
         self.width = self.tmx_data.width
         self.height = self.tmx_data.height
         self.layers = self.tmx_data.layers
-        self.brick_group = pygame.sprite.Group()  #  Группа спрайтов для кирпичей
+        self.brick_group = pygame.sprite.Group()  # Группа спрайтов для кирпичей
+        self.spike_group = pygame.sprite.Group()  # Группа спрайтов для шипов
+        self.all_sprites = pygame.sprite.Group()
         self.collision_layer = self.tmx_data.get_layer_by_name('Tiles')  # или другое имя слоя с коллизиями
         self.map_image = self.make_map()  # Создаем единое изображение карты
         self.rect = self.map_image.get_rect()
         self.rect.width = self.width * self.tile_width
         self.rect.height = self.height * self.tile_height
         self.Player = None
-        self.all_sprites = pygame.sprite.Group()
 
     def make_map(self):
         temp_surface = pygame.Surface((self.width * self.tile_width, self.height * self.tile_height))
@@ -165,11 +187,15 @@ class Map():
                 for x, y, image in layer.tiles():  # Используем image вместо tile
                     temp_surface.blit(image, (x * self.tile_width, y * self.tile_height))
 
-        # Создаем спрайты кирпичей
+        # Создаем спрайты кирпичей и шипов
         for obj in self.tmx_data.objects:
             if obj.name == "Wall":
                 brick = Brick(obj.x, obj.y, obj.width, obj.height)
                 self.brick_group.add(brick)  #  Добавляем кирпич в группу
+            elif obj.name == "Spike":
+                spike = Spike(obj.x, obj.y, obj.width, obj.height)  # Создаем шип
+                self.spike_group.add(spike)  # Добавляем шип в группу шипов
+                self.all_sprites.add(spike)  # Добавляем шип в группу всех спрайтов
 
         return temp_surface
 
@@ -177,6 +203,8 @@ class Map():
         surface.blit(self.map_image, (0, 0))
         for brick in self.brick_group: # Отрисовываем кирпичи
             surface.blit(brick.image, brick.rect)
+        for spike in self.spike_group:  # Отрисовываем шипы
+            surface.blit(spike.image, spike.rect)
 
     def get_collision(self):
         return self.collision_layer
@@ -184,20 +212,16 @@ class Map():
     def view_player(self):
         for obj in self.tmx_data.objects:
             if obj.name == "Player":
-                self.Player = Frog(obj.x, obj.y, self.brick_group) # Передаем группу с кирпичами
+                self.Player = Frog(obj.x, obj.y, self.brick_group, self.spike_group)  # Передаем группу с кирпичами и шипами
                 self.Player.map = self  # Присваиваем ссылку на карту игроку
                 self.all_sprites.add(self.Player)
                 break
 
 
-# тестовый первый уровень
-def level1():
+def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
-
-    back = pygame.image.load("Buttons/back.png")
-    rect_back = back.get_rect(topleft=(10, 25))
 
     game_map = Map("Tiledmap/tmx/test_map.tmx")
     game_map.view_player()  # Создаем игрока после загрузки карты
@@ -209,10 +233,6 @@ def level1():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if rect_back.collidepoint(event.pos):
-                    pass
         clock.tick(60)
 
         pygame.event.pump()
@@ -221,84 +241,11 @@ def level1():
         # Рисуем
         screen.fill(BACKGROUND)
         game_map.render(screen)  # Отрисовываем карту и кирпичи
-        screen.blit(back, rect_back)
         player.draw(screen)
-        # Обновляем
-        pygame.display.flip()
 
-
-# тестовый второй уровень
-def level2():
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    clock = pygame.time.Clock()
-
-    back = pygame.image.load("Buttons/back.png")
-    rect_back = back.get_rect(topleft=(10, 25))
-
-    game_map = Map("Tiledmap/tmx/test_map2.tmx")
-    game_map.view_player()  # Создаем игрока после загрузки карты
-
-    player = game_map.Player  # Получаем ссылку на игрока из объекта карты
-
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if rect_back.collidepoint(event.pos):
-                    pass
-        clock.tick(60)
-
-        pygame.event.pump()
-        player.update()
-
-        # Рисуем
-        screen.fill(BACKGROUND)
-        game_map.render(screen)  # Отрисовываем карту и кирпичи
-        screen.blit(back, rect_back)
-        player.draw(screen)
-        # Обновляем
-        pygame.display.flip()
-
-
-def level3():
-    pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    clock = pygame.time.Clock()
-
-    back = pygame.image.load("Buttons/back.png")
-    rect_back = back.get_rect(topleft=(10, 25))
-
-    game_map = Map("Tiledmap/tmx/test_map3.tmx")
-    game_map.view_player()  # Создаем игрока после загрузки карты
-
-    player = game_map.Player  # Получаем ссылку на игрока из объекта карты
-
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if rect_back.collidepoint(event.pos):
-                    pass
-        clock.tick(60)
-
-        pygame.event.pump()
-        player.update()
-
-        # Рисуем
-        screen.fill(BACKGROUND)
-        game_map.render(screen)  # Отрисовываем карту и кирпичи
-        screen.blit(back, rect_back)
-        player.draw(screen)
         # Обновляем
         pygame.display.flip()
 
 
 if __name__ == "__main__":
-    level3()
+    main()
