@@ -2,6 +2,7 @@ import pygame
 import sys
 import pytmx
 import random
+import time
 
 
 # Вспомогательные функции
@@ -28,7 +29,6 @@ def play_random_music():  # Проигрыш музыки в меню
 class Sprite(pygame.sprite.Sprite):
     def __init__(self, image, startx, starty):
         super().__init__()
-
         self.image = pygame.image.load(image)  # Загрузка изображения
         self.rect = self.image.get_rect()  # Rect этого изображения
 
@@ -43,12 +43,13 @@ class Sprite(pygame.sprite.Sprite):
 
 # Класс персонажа
 class Frog(Sprite):
-    def __init__(self, startx, starty, brick_group, spike_group): #  Принимаем spike_group
+    def __init__(self, startx, starty, brick_group, spike_group):  # Принимаем spike_group
         super().__init__("Froggo/Animation/frog.png", startx, starty)
         self.stand_image = self.image
         self.jump_image = pygame.image.load('Froggo/Animation/jump.png')
 
         self.walk_cycle = [pygame.image.load(f"Froggo/Animation/walk_animation{i}.png") for i in range(1, 9)]
+        self.dead_cycle = [pygame.image.load(f"Froggo/Animation/dead_animation{i}.png") for i in range(1, 9)]
         self.animation_index = 0
         self.facing_left = False
 
@@ -63,10 +64,19 @@ class Frog(Sprite):
         self.prev_key = pygame.key.get_pressed()
         self.map = None  # Добавлено поле для хранения ссылки на карту
         self.brick_group = brick_group  # Спрайт группа кирпичей
-        self.spike_group = spike_group # Сохраняем ссылку на группу шипов
+        self.spike_group = spike_group  # Сохраняем ссылку на группу шипов
         self.is_jumping = False
+        self.dying = False  # Флаг, показывающий, что началась анимация смерти
+        self.death_start_time = 0  # Время начала анимации смерти
+        self.death_animation_index = 0  # Индекс текущего кадра анимации смерти
+        self.death_frame_duration = DEATH_ANIMATION_DURATION / DEATH_FRAMES  # Длительность одного кадра анимации смерти
+        self.last_death_frame_time = 0  # Время отображения последнего кадра анимации смерти
 
     def update(self):
+        if self.dying:
+            self.death_animation()
+            return  # Прекращаем нормальное обновление
+
         hsp = 0  # Горизонтальная скорость
 
         # Проверка нажатия кнопки
@@ -152,13 +162,37 @@ class Frog(Sprite):
         if self.facing_left:
             self.image = pygame.transform.flip(self.image, True, False)
 
+    def death_animation(self):
+        if time.time() - self.last_death_frame_time > self.death_frame_duration:
+            self.last_death_frame_time = time.time()
+            self.image = self.dead_cycle[self.death_animation_index]
+            self.death_animation_index += 1
+            if self.death_animation_index >= len(self.dead_cycle):
+                self.death_animation_index = 0
+                self.dying = False
+                self.reset()
+
     def on_ground(self):
         return self.onground
 
     def spike_collision(self):
-        print("Персонаж умер!")  # Выводим сообщение в консоль
-        pygame.quit()
-        sys.exit()
+        if not self.dying:  # Если анимация смерти еще не началась
+            self.dying = True  # Начинаем анимацию смерти
+            self.death_start_time = time.time()  # Запоминаем время начала
+            self.last_death_frame_time = time.time() # Ставим время последнего кадра
+            self.death_animation_index = 0 # Индекс кадра на ноль
+            print("Персонаж умер!") # Выводим сообщение в консоль
+
+    def reset(self):
+        for obj in self.map.tmx_data.objects:
+            if obj.name == "Player":
+                self.rect.x = obj.x
+                self.rect.y = obj.y
+                break
+        self.image = self.stand_image  # Возвращаем обычную картинку
+        self.dying = False  # Сбрасываем флаг
+        self.vsp = 0
+        self.death_animation_index = 0
 
 
 # Класс блока
@@ -212,7 +246,7 @@ class Map():
         for obj in self.tmx_data.objects:
             if obj.name == "Wall":
                 brick = Brick(obj.x, obj.y, obj.width, obj.height)
-                self.brick_group.add(brick)  #  Добавляем кирпич в группу
+                self.brick_group.add(brick)  # Добавляем кирпич в группу
             elif obj.name == "Spike":
                 spike = Spike(obj.x, obj.y, obj.width, obj.height)  # Создаем шип
                 self.spike_group.add(spike)  # Добавляем шип в группу шипов
@@ -397,7 +431,6 @@ def level1(screen):
 
     player = game_map.Player  # Получаем ссылку на игрока из объекта карты
 
-    level1_music_playing
     while level1_music_playing:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -547,6 +580,9 @@ HEIGHT = 600  # Высота окна
 BACKGROUND = 'black'  # Чёрный цвет для заднего фона
 BACKGROUND_FOR_MENU = 'Backgrounds/menu_bg.jpg'
 MUSIC_ON_LEVEL = 'Sounds/dungeoun_music.mp3'
+DEATH_ANIMATION_DURATION = 1  # Длительность анимации смерти в секундах
+DEATH_FRAMES = 8 # Кол-во кадров смерти
+
 
 # Список музыки для меню
 MENU_MUSIC = [

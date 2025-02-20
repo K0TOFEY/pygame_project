@@ -1,19 +1,20 @@
 import pygame
 import sys
 import pytmx
+import time
 
 WIDTH = 800
 HEIGHT = 608
 BACKGROUND = 'black'
+DEATH_ANIMATION_DURATION = 1  # Длительность анимации смерти в секундах
+DEATH_FRAMES = 8 # Кол-во кадров смерти
 
 
 class Sprite(pygame.sprite.Sprite):
     def __init__(self, image, startx, starty):
         super().__init__()
-
         self.image = pygame.image.load(image)
         self.rect = self.image.get_rect()
-
         self.rect.center = [startx, starty]
 
     def update(self):
@@ -24,12 +25,13 @@ class Sprite(pygame.sprite.Sprite):
 
 
 class Frog(Sprite):
-    def __init__(self, startx, starty, brick_group, spike_group): #  Принимаем spike_group
+    def __init__(self, startx, starty, brick_group, spike_group):  # Принимаем spike_group
         super().__init__("Froggo/Animation/frog.png", startx, starty)
         self.stand_image = self.image
         self.jump_image = pygame.image.load('Froggo/Animation/jump.png')
 
         self.walk_cycle = [pygame.image.load(f"Froggo/Animation/walk_animation{i}.png") for i in range(1, 9)]
+        self.dead_cycle = [pygame.image.load(f"Froggo/Animation/dead_animation{i}.png") for i in range(1, 9)]
         self.animation_index = 0
         self.facing_left = False
 
@@ -44,10 +46,19 @@ class Frog(Sprite):
         self.prev_key = pygame.key.get_pressed()
         self.map = None  # Добавлено поле для хранения ссылки на карту
         self.brick_group = brick_group  # Спрайт группа кирпичей
-        self.spike_group = spike_group # Сохраняем ссылку на группу шипов
+        self.spike_group = spike_group  # Сохраняем ссылку на группу шипов
         self.is_jumping = False
+        self.dying = False  # Флаг, показывающий, что началась анимация смерти
+        self.death_start_time = 0  # Время начала анимации смерти
+        self.death_animation_index = 0  # Индекс текущего кадра анимации смерти
+        self.death_frame_duration = DEATH_ANIMATION_DURATION / DEATH_FRAMES  # Длительность одного кадра анимации смерти
+        self.last_death_frame_time = 0  # Время отображения последнего кадра анимации смерти
 
     def update(self):
+        if self.dying:
+            self.death_animation()
+            return  # Прекращаем нормальное обновление
+
         hsp = 0  # Горизонтальная скорость
 
         # Проверка нажатия кнопки
@@ -133,13 +144,37 @@ class Frog(Sprite):
         if self.facing_left:
             self.image = pygame.transform.flip(self.image, True, False)
 
+    def death_animation(self):
+        if time.time() - self.last_death_frame_time > self.death_frame_duration:
+            self.last_death_frame_time = time.time()
+            self.image = self.dead_cycle[self.death_animation_index]
+            self.death_animation_index += 1
+            if self.death_animation_index >= len(self.dead_cycle):
+                self.death_animation_index = 0
+                self.dying = False
+                self.reset()
+
     def on_ground(self):
         return self.onground
 
     def spike_collision(self):
-        print("Персонаж умер!")  # Выводим сообщение в консоль
-        pygame.quit()
-        sys.exit()
+        if not self.dying:  # Если анимация смерти еще не началась
+            self.dying = True  # Начинаем анимацию смерти
+            self.death_start_time = time.time()  # Запоминаем время начала
+            self.last_death_frame_time = time.time() # Ставим время последнего кадра
+            self.death_animation_index = 0 # Индекс кадра на ноль
+            print("Персонаж умер!") # Выводим сообщение в консоль
+
+    def reset(self):
+        for obj in self.map.tmx_data.objects:
+            if obj.name == "Player":
+                self.rect.x = obj.x
+                self.rect.y = obj.y
+                break
+        self.image = self.stand_image  # Возвращаем обычную картинку
+        self.dying = False  # Сбрасываем флаг
+        self.vsp = 0
+        self.death_animation_index = 0
 
 
 class Brick(pygame.sprite.Sprite): # Класс для кирпичей
@@ -170,8 +205,8 @@ class Map():
         self.width = self.tmx_data.width
         self.height = self.tmx_data.height
         self.layers = self.tmx_data.layers
-        self.brick_group = pygame.sprite.Group()  # Группа спрайтов для кирпичей
-        self.spike_group = pygame.sprite.Group()  # Группа спрайтов для шипов
+        self.brick_group = pygame.sprite.Group()  #  Группа спрайтов для кирпичей
+        self.spike_group = pygame.sprite.Group()  #  Группа спрайтов для шипов
         self.all_sprites = pygame.sprite.Group()
         self.collision_layer = self.tmx_data.get_layer_by_name('Tiles')  # или другое имя слоя с коллизиями
         self.map_image = self.make_map()  # Создаем единое изображение карты
