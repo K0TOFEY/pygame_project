@@ -43,7 +43,7 @@ class Sprite(pygame.sprite.Sprite):
 
 # Класс персонажа
 class Frog(Sprite):
-    def __init__(self, startx, starty, brick_group, spike_group, coin_group):  # Принимаем spike_group
+    def __init__(self, startx, starty, brick_group, spike_group, coin_group):  # Принимаем coin_group
         super().__init__("Froggo/Animation/frog.png", startx, starty)
         self.stand_image = self.image
         self.jump_image = pygame.image.load('Froggo/Animation/jump.png')
@@ -65,13 +65,14 @@ class Frog(Sprite):
         self.map = None  # Добавлено поле для хранения ссылки на карту
         self.brick_group = brick_group  # Спрайт группа кирпичей
         self.spike_group = spike_group  # Сохраняем ссылку на группу шипов
-        self.coin_group = coin_group
+        self.coin_group = coin_group # Сохраняем группу монет
         self.is_jumping = False
         self.dying = False  # Флаг, показывающий, что началась анимация смерти
         self.death_start_time = 0  # Время начала анимации смерти
         self.death_animation_index = 0  # Индекс текущего кадра анимации смерти
         self.death_frame_duration = DEATH_ANIMATION_DURATION / DEATH_FRAMES  # Длительность одного кадра анимации смерти
         self.last_death_frame_time = 0  # Время отображения последнего кадра анимации смерти
+        self.coin_sound = pygame.mixer.Sound("Sounds/money_music.mp3")  # Звук для монеты
 
     def update(self):
         if self.dying:
@@ -151,6 +152,7 @@ class Frog(Sprite):
         # Проверка столкновений с монетами
         for coin in self.coin_group:  # Перебираем монеты
             if self.rect.colliderect(coin.rect):  # Если игрок столкнулся с монетой
+                self.coin_sound.play() # Проигрываем звук
                 coin.kill()  # Удаляем монету из всех групп
 
     def walk_animation(self):
@@ -185,8 +187,6 @@ class Frog(Sprite):
         if not self.dying:  # Если анимация смерти еще не началась
             self.dying = True  # Начинаем анимацию смерти
             self.death_start_time = time.time()  # Запоминаем время начала
-            self.last_death_frame_time = time.time() # Ставим время последнего кадра
-            self.death_animation_index = 0 # Индекс кадра на ноль
             print("Персонаж умер!") # Выводим сообщение в консоль
 
     def reset(self):
@@ -232,7 +232,7 @@ class Money(pygame.sprite.Sprite):
         self.coin_cycle = [pygame.image.load(f"Money/money_animation{i}.png") for i in range(1, 6)]
         self.animation_index = 0
         self.last_update = pygame.time.get_ticks()
-        self.animation_cooldown = 100 # 100 ms между кадрами
+        self.animation_cooldown = 100  # 100 ms между кадрами
 
     def update(self):
         now = pygame.time.get_ticks()
@@ -555,6 +555,8 @@ def level2(screen):
         game_map.render(screen)  # Отрисовываем карту и кирпичи
         screen.blit(back, rect_back)  # Кнопка назад
         player.draw(screen)  # Отрисовываем игрока
+        for coin in game_map.coin_group:
+            coin.update() # анимация монет
         # Обновляем
         pygame.display.flip()
 
@@ -603,6 +605,8 @@ def level3(screen):
         game_map.render(screen)  # Отрисовываем карту и кирпичи
         screen.blit(back, rect_back)  # Кнопка назад
         player.draw(screen)  # Отрисовываем игрока
+        for coin in game_map.coin_group:
+            coin.update() # анимация монет
         # Обновляем
         pygame.display.flip()
 
