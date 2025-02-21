@@ -292,7 +292,7 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
 
-    game_map = Map("Tiledmap/tmx/test_map.tmx")
+    game_map = Map("Tiledmap/tmx/test_map1.tmx")
     game_map.view_player()  # Создаем игрока после загрузки карты
 
     player = game_map.Player  # Получаем ссылку на игрока из объекта карты

@@ -1,1 +1,1 @@
-print("lolololo")
+print("kupola")
