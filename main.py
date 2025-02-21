@@ -148,6 +148,11 @@ class Frog(Sprite):
             if self.rect.colliderect(spike.rect):
                 self.spike_collision()  # Вызываем метод столкновения с шипами
 
+        # Проверка столкновений с монетами
+        for coin in self.coin_group:  # Перебираем монеты
+            if self.rect.colliderect(coin.rect):  # Если игрок столкнулся с монетой
+                coin.kill()  # Удаляем монету из всех групп
+
     def walk_animation(self):
         self.image = self.walk_cycle[self.animation_index]
         if self.facing_left:
@@ -246,9 +251,9 @@ class Map():
         self.width = self.tmx_data.width
         self.height = self.tmx_data.height
         self.layers = self.tmx_data.layers
-        self.brick_group = pygame.sprite.Group()  #  Группа спрайтов для кирпичей
-        self.spike_group = pygame.sprite.Group()  #  Группа спрайтов для шипов
-        self.coin_group = pygame.sprite.Group()  #  Группа спрайтов для монет
+        self.brick_group = pygame.sprite.Group()  # Группа спрайтов для кирпичей
+        self.spike_group = pygame.sprite.Group()  # Группа спрайтов для шипов
+        self.coin_group = pygame.sprite.Group()  # Группа спрайтов для монет
         self.all_sprites = pygame.sprite.Group()
         self.collision_layer = self.tmx_data.get_layer_by_name('Tiles')  # или другое имя слоя с коллизиями
         self.map_image = self.make_map()  # Создаем единое изображение карты
