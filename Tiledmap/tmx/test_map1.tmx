@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.1" orientation="orthogonal" renderorder="left-up" width="25" height="19" tilewidth="32" tileheight="32" infinite="0" nextlayerid="6" nextobjectid="102">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="left-up" width="25" height="19" tilewidth="32" tileheight="32" infinite="0" nextlayerid="6" nextobjectid="243">
  <tileset firstgid="1" source="../tsx/bg.tsx"/>
  <tileset firstgid="2" source="../tsx/brick_1.tsx"/>
  <tileset firstgid="3" source="../tsx/spike.tsx"/>
@@ -12,7 +12,7 @@
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -54,91 +54,487 @@
    <point/>
   </object>
   <object id="48" name="Wall" x="128" y="128">
-   <polygon points="0,0 0,96 32,96 32,0"/>
+   <polygon points="0,0 0,31.5 32,31.5 32,0"/>
   </object>
-  <object id="49" name="Wall" x="160" y="192">
-   <polygon points="0,0 32,0 32,64 0,64"/>
+  <object id="49" name="Wall" x="159.5" y="192.5">
+   <polygon points="0,0 32,0 32,31.5 0,31.5"/>
   </object>
   <object id="50" name="Wall" x="192" y="224">
    <polygon points="0,0 32,0 32,32 0,32"/>
   </object>
+  <object id="155" name="Wall" x="160" y="224">
+   <polygon points="0,0 32,0 32,32 0,32"/>
+  </object>
+  <object id="156" name="Wall" x="128.5" y="160">
+   <polygon points="0,0 32,0 32,32 0,32"/>
+  </object>
+  <object id="157" name="Wall" x="128" y="192">
+   <polygon points="0,0 32,0 32,32 0,32"/>
+  </object>
   <object id="51" name="Wall" x="288" y="288">
-   <polygon points="0,0 64,0 96,0 96,32 0,32"/>
+   <polygon points="0,0 21.3333,0 32,0 32,32 0,32"/>
   </object>
-  <object id="52" name="Wall" x="352" y="224">
-   <polygon points="0,0 64,0 64,64 0,64"/>
+  <object id="111" name="Wall" x="321" y="288.5">
+   <polygon points="-1,-0.5 31,-0.5 31,-0.5 31,31.5 -1,31.5"/>
   </object>
-  <object id="53" name="Wall" x="416" y="256">
-   <polygon points="0,0 64,0 64,32 0,32"/>
+  <object id="112" name="Wall" x="352" y="288.5">
+   <polygon points="0,-0.5 32,-0.5 32,-0.5 32,31.5 0,31.5"/>
+  </object>
+  <object id="107" name="Wall" x="353" y="256.5">
+   <polygon points="-1,-0.5 31,-0.5 31,31.5 -1,31.5"/>
+  </object>
+  <object id="104" name="Wall" x="384" y="224">
+   <polygon points="0,0 32,0 32,32 0,32"/>
+  </object>
+  <object id="242" name="Wall" x="350.909" y="223.818">
+   <polygon points="1.09091,0.181818 33.0909,0.181818 33.0909,32.1818 1.09091,32.1818"/>
+  </object>
+  <object id="53" name="Wall" x="418" y="256.5">
+   <polygon points="-2,-0.5 30,-0.5 30,31.5 -2,31.5"/>
+  </object>
+  <object id="108" name="Wall" x="384" y="256">
+   <polygon points="0,0 32,0 32,32 0,32"/>
+  </object>
+  <object id="102" name="Wall" x="448" y="256">
+   <polygon points="0,0 32,0 32,32 0,32"/>
   </object>
   <object id="54" name="Wall" x="544" y="192">
-   <polygon points="0,0 160,0 160,32 0,32"/>
+   <polygon points="0,0 32,0 32,32 0,32"/>
   </object>
-  <object id="55" name="Wall" x="608" y="128">
-   <polygon points="0,0 32,0 32,64 0,64"/>
+  <object id="184" name="Wall" x="576" y="192.5">
+   <polygon points="0,0 32,0 32,32 0,32"/>
+  </object>
+  <object id="186" name="Wall" x="608" y="191">
+   <polygon points="0,0 32,0 32,32 0,32"/>
+  </object>
+  <object id="187" name="Wall" x="640.5" y="192">
+   <polygon points="0,0 32,0 32,32 0,32"/>
+  </object>
+  <object id="188" name="Wall" x="671" y="192.5">
+   <polygon points="0,0 32,0 32,32 0,32"/>
+  </object>
+  <object id="55" name="Wall" x="608" y="160">
+   <polygon points="0,0 32,0 32,31 0,31"/>
+  </object>
+  <object id="189" name="Wall" x="607.5" y="128">
+   <polygon points="0,0 32,0 32,31 0,31"/>
   </object>
   <object id="56" name="Wall" x="512" y="320">
-   <polygon points="0,0 96,0 96,32 0,32"/>
+   <polygon points="0,0 32.5,0 32.5,32 0,32"/>
+  </object>
+  <object id="158" name="Wall" x="544" y="320">
+   <polygon points="0,0 32.5,0 32.5,32 0,32"/>
+  </object>
+  <object id="159" name="Wall" x="575.5" y="320">
+   <polygon points="0,0 32.5,0 32.5,32 0,32"/>
   </object>
   <object id="58" name="Wall" x="704" y="288">
-   <polygon points="0,0 0,128 32,128 32,0"/>
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="164" name="Wall" x="704" y="320">
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="165" name="Wall" x="704" y="352.5">
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="166" name="Wall" x="704" y="384">
+   <polygon points="0,0 0,32 32,32 32,0"/>
   </object>
   <object id="59" name="Wall" x="640" y="384">
-   <polygon points="0,0 64,0 64,32 0,32"/>
+   <polygon points="0,0 32.5,0 32.5,32 0,32"/>
+  </object>
+  <object id="163" name="Wall" x="672" y="384">
+   <polygon points="0,0 32.5,0 32.5,32 0,32"/>
   </object>
   <object id="60" name="Wall" x="544" y="448">
-   <polygon points="0,0 32,0 32,64 0,64"/>
+   <polygon points="0,0 32,0 32,32 0,32"/>
   </object>
-  <object id="61" name="Wall" x="576" y="480">
-   <polygon points="0,0 32,0 32,64 0,64"/>
+  <object id="160" name="Wall" x="544" y="480">
+   <polygon points="0,0 32,0 32,32 0,32"/>
   </object>
-  <object id="62" name="Wall" x="608" y="512">
-   <polygon points="0,0 64,0 64,32 0,32"/>
+  <object id="61" name="Wall" x="575" y="480.5">
+   <polygon points="0,0 32,0 32,33 0,33"/>
+  </object>
+  <object id="161" name="Wall" x="576" y="514">
+   <polygon points="0,0 30.5,0 30.5,30.5 0,30.5"/>
+  </object>
+  <object id="62" name="Wall" x="606.5" y="512">
+   <polygon points="0,0 33,0 33,32 0,32"/>
+  </object>
+  <object id="162" name="Wall" x="640" y="512">
+   <polygon points="0,0 31.5,0 31.5,31.5 0,31.5"/>
   </object>
   <object id="63" name="Wall" x="128" y="352">
-   <polygon points="0,0 128,0 128,32 0,32"/>
+   <polygon points="0,0 31,0 31,32 0,32"/>
+  </object>
+  <object id="113" name="Wall" x="160" y="352">
+   <polygon points="0,0 31,0 31,32 0,32"/>
+  </object>
+  <object id="114" name="Wall" x="192" y="352">
+   <polygon points="0,0 31,0 31,32 0,32"/>
+  </object>
+  <object id="115" name="Wall" x="224" y="352">
+   <polygon points="0,0 31,0 31,32 0,32"/>
   </object>
   <object id="64" name="Wall" x="224" y="320">
    <polygon points="0,0 32,0 32,32 0,32"/>
   </object>
   <object id="66" name="Wall" x="32" y="0">
-   <polygon points="0,0 0,608 -32,608 -32,0"/>
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
+  </object>
+  <object id="137" name="Wall" x="32" y="32">
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
+  </object>
+  <object id="138" name="Wall" x="32" y="64">
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
+  </object>
+  <object id="139" name="Wall" x="32" y="96">
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
+  </object>
+  <object id="140" name="Wall" x="32" y="128">
+   <polygon points="0,0 0,32 -32,32 -32,0"/>
+  </object>
+  <object id="141" name="Wall" x="32" y="160">
+   <polygon points="0,0 0,32.3333 -32.6667,32.3333 -32.6667,0"/>
+  </object>
+  <object id="142" name="Wall" x="32" y="192">
+   <polygon points="0,0 0,31 -33.3333,31 -33.3333,0"/>
+  </object>
+  <object id="143" name="Wall" x="32" y="224">
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
+  </object>
+  <object id="144" name="Wall" x="32" y="256">
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
+  </object>
+  <object id="145" name="Wall" x="32" y="288">
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
+  </object>
+  <object id="146" name="Wall" x="32" y="320">
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
+  </object>
+  <object id="147" name="Wall" x="32" y="352">
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
+  </object>
+  <object id="148" name="Wall" x="32" y="384">
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
+  </object>
+  <object id="149" name="Wall" x="32" y="416">
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
+  </object>
+  <object id="150" name="Wall" x="32" y="448">
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
+  </object>
+  <object id="151" name="Wall" x="32" y="480">
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
+  </object>
+  <object id="152" name="Wall" x="32" y="512">
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
+  </object>
+  <object id="153" name="Wall" x="32" y="544">
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
+  </object>
+  <object id="154" name="Wall" x="32" y="576">
+   <polygon points="0,0 0,31 -32,31 -32,0"/>
   </object>
   <object id="67" name="Wall" x="32" y="0">
-   <polygon points="0,0 768,0 768,32 0,32"/>
+   <polygon points="0,0 31.9583,0 31.9583,32 0,32"/>
+  </object>
+  <object id="216" name="Wall" x="64" y="0">
+   <polygon points="0,0 31.9583,0 31.9583,32 0,32"/>
+  </object>
+  <object id="217" name="Wall" x="96" y="0">
+   <polygon points="0,0 31.9583,0 31.9583,32 0,32"/>
+  </object>
+  <object id="218" name="Wall" x="128" y="0">
+   <polygon points="0,0 31.9583,0 31.9583,32 0,32"/>
+  </object>
+  <object id="219" name="Wall" x="160" y="0">
+   <polygon points="0,0 31.9583,0 31.9583,32 0,32"/>
+  </object>
+  <object id="220" name="Wall" x="192" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="221" name="Wall" x="224" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="222" name="Wall" x="224" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="223" name="Wall" x="256" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="224" name="Wall" x="288" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="225" name="Wall" x="320" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="226" name="Wall" x="352" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="227" name="Wall" x="384" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="228" name="Wall" x="416" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="229" name="Wall" x="448.375" y="0.25">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="230" name="Wall" x="480" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="231" name="Wall" x="512" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="232" name="Wall" x="544" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="233" name="Wall" x="576" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="234" name="Wall" x="608" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="235" name="Wall" x="640" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="236" name="Wall" x="672" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="237" name="Wall" x="704" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="238" name="Wall" x="736" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
+  </object>
+  <object id="239" name="Wall" x="768" y="0">
+   <polygon points="0,0 31.0833,0 31.0833,32 0,32"/>
   </object>
   <object id="68" name="Wall" x="768" y="32">
-   <polygon points="0,0 0,447 32,447 32,0"/>
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="190" name="Wall" x="768" y="64">
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="191" name="Wall" x="768" y="96">
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="192" name="Wall" x="768" y="128">
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="193" name="Wall" x="768" y="160">
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="194" name="Wall" x="768" y="192">
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="195" name="Wall" x="768" y="224">
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="196" name="Wall" x="768" y="256">
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="197" name="Wall" x="768" y="288">
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="198" name="Wall" x="768" y="320">
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="199" name="Wall" x="768" y="352">
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="200" name="Wall" x="768" y="384">
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="201" name="Wall" x="769" y="416">
+   <polygon points="0,0 0,32 32,32 32,0"/>
+  </object>
+  <object id="202" name="Wall" x="768" y="448">
+   <polygon points="0,0 0,32 32,32 32,0"/>
   </object>
   <object id="69" name="Wall" x="32" y="32">
-   <polygon points="0,0 320,0 320,32 0,32"/>
+   <polygon points="0,0 31.9167,0 31.9167,32.2526 0,32.2526"/>
+  </object>
+  <object id="207" name="Wall" x="64" y="32">
+   <polygon points="0,0 31.6667,0 31.6667,32 0,32"/>
+  </object>
+  <object id="208" name="Wall" x="96" y="32">
+   <polygon points="0,0 31.6667,0 31.6667,32 0,32"/>
+  </object>
+  <object id="209" name="Wall" x="128" y="32">
+   <polygon points="0,0 31.6667,0 31.6667,32 0,32"/>
+  </object>
+  <object id="210" name="Wall" x="160" y="32">
+   <polygon points="0,0 31.6667,0 31.6667,32 0,32"/>
+  </object>
+  <object id="211" name="Wall" x="192" y="32">
+   <polygon points="0,0 31.6667,0 31.6667,32 0,32"/>
+  </object>
+  <object id="212" name="Wall" x="224" y="32">
+   <polygon points="0,0 31.6667,0 31.6667,32 0,32"/>
+  </object>
+  <object id="213" name="Wall" x="256" y="32">
+   <polygon points="0,0 31.6667,0 31.6667,32 0,32"/>
+  </object>
+  <object id="214" name="Wall" x="288" y="32">
+   <polygon points="0,0 31.3333,0 31.3333,30.6667 0,30.6667"/>
+  </object>
+  <object id="215" name="Wall" x="320" y="32">
+   <polygon points="0,0 30.6667,0 30.6667,30.6667 0,30.6667"/>
   </object>
   <object id="70" name="Wall" x="32" y="64">
-   <polygon points="0,0 160,0 160,32 0,32"/>
+   <polygon points="0,0 32.6667,0 32.6667,32 0,32"/>
+  </object>
+  <object id="203" name="Wall" x="64" y="64">
+   <polygon points="0,0 32.6667,0 32.6667,32 0,32"/>
+  </object>
+  <object id="204" name="Wall" x="96" y="64">
+   <polygon points="0,0 31,0 31,32 0,32"/>
+  </object>
+  <object id="205" name="Wall" x="128" y="64">
+   <polygon points="0,0 31,0 31,32 0,32"/>
+  </object>
+  <object id="206" name="Wall" x="160" y="64">
+   <polygon points="0,0 31,0 31,32 0,32"/>
   </object>
   <object id="71" name="Wall" x="32" y="96">
    <polygon points="0,0 32,0 32,32 0,32"/>
   </object>
   <object id="72" name="Wall" x="32" y="384">
-   <polygon points="0,0 32,0 32,224 0,224"/>
+   <polygon points="0,0 32,0 32,32.5 0,32.5"/>
+  </object>
+  <object id="131" name="Wall" x="32" y="416">
+   <polygon points="0,0 32,0 32,32.5 0,32.5"/>
+  </object>
+  <object id="132" name="Wall" x="32" y="448">
+   <polygon points="0,0 32,0 32,32.5 0,32.5"/>
+  </object>
+  <object id="133" name="Wall" x="32" y="480">
+   <polygon points="0,0 32,0 32,32.5 0,32.5"/>
+  </object>
+  <object id="135" name="Wall" x="64" y="544">
+   <polygon points="0,0 32,0 32,32.5 0,32.5"/>
+  </object>
+  <object id="136" name="Wall" x="32" y="576">
+   <polygon points="0,0 32,0 32,30.8333 0,30.8333"/>
+  </object>
+  <object id="134" name="Wall" x="32" y="512">
+   <polygon points="0,0 32,0 32,32.5 0,32.5"/>
   </object>
   <object id="73" name="Wall" x="64" y="416">
-   <polygon points="0,0 32,0 32,192 0,192"/>
+   <polygon points="0,0 32,0 32,32.5 0,32.5"/>
+  </object>
+  <object id="126" name="Wall" x="64" y="448">
+   <polygon points="0,0 32,0 32,32.5 0,32.5"/>
+  </object>
+  <object id="127" name="Wall" x="64" y="480">
+   <polygon points="0,0 32,0 32,32.5 0,32.5"/>
+  </object>
+  <object id="128" name="Wall" x="64" y="512">
+   <polygon points="0,0 32,0 32,32.5 0,32.5"/>
+  </object>
+  <object id="129" name="Wall" x="64" y="544">
+   <polygon points="0,0 32,0 32,32.5 0,32.5"/>
+  </object>
+  <object id="130" name="Wall" x="64" y="576">
+   <polygon points="0,0 32,0 32,31.1667 0,31.1667"/>
   </object>
   <object id="74" name="Wall" x="96" y="448">
-   <polygon points="0,0 32,0 32,160 0,160"/>
+   <polygon points="0,0 32,0 32,31 0,31"/>
+  </object>
+  <object id="122" name="Wall" x="96" y="480">
+   <polygon points="0,0 32,0 32,31 0,31"/>
+  </object>
+  <object id="123" name="Wall" x="96" y="511.5">
+   <polygon points="0,0 32,0 32,31 0,31"/>
+  </object>
+  <object id="124" name="Wall" x="96" y="544">
+   <polygon points="0,0 32,0 32,31 0,31"/>
+  </object>
+  <object id="125" name="Wall" x="96" y="576">
+   <polygon points="0,0 32,0 32,31 0,31"/>
   </object>
   <object id="75" name="Wall" x="128" y="480">
-   <polygon points="0,0 32,0 32,128 0,128"/>
+   <polygon points="0,0 32,0 32,31.5 0,31.5"/>
+  </object>
+  <object id="119" name="Wall" x="96" y="512">
+   <polygon points="0,0 32,0 32,31.5 0,31.5"/>
+  </object>
+  <object id="120" name="Wall" x="128" y="544">
+   <polygon points="0,0 32,0 32,31.5 0,31.5"/>
+  </object>
+  <object id="121" name="Wall" x="128" y="576">
+   <polygon points="0,0 32,0 32,31.5 0,31.5"/>
   </object>
   <object id="76" name="Wall" x="160" y="512">
    <polygon points="0,0 32,0 32,32 0,32"/>
   </object>
-  <object id="77" name="Wall" x="160" y="544">
-   <polygon points="0,0 64,0 64,64 0,64"/>
+  <object id="77" name="Wall" x="160" y="576">
+   <polygon points="0,0 31,0 31,31.5 0,31.5"/>
+  </object>
+  <object id="116" name="Wall" x="160" y="544">
+   <polygon points="0,0 31,0 31,31.5 0,31.5"/>
+  </object>
+  <object id="117" name="Wall" x="192" y="544">
+   <polygon points="0,0 31,0 31,31.5 0,31.5"/>
+  </object>
+  <object id="118" name="Wall" x="192" y="576">
+   <polygon points="0,0 31,0 31,31.5 0,31.5"/>
   </object>
   <object id="78" name="Wall" x="224" y="576">
-   <polygon points="0,0 580.667,0 580.667,32 0,32"/>
+   <polygon points="0,0 32.667,0 32.667,32 0,32"/>
+  </object>
+  <object id="167" name="Wall" x="256" y="576">
+   <polygon points="0,0 31.167,0 31.167,32 0,32"/>
+  </object>
+  <object id="168" name="Wall" x="288" y="576">
+   <polygon points="0,0 31.667,0 31.667,31 0,31"/>
+  </object>
+  <object id="169" name="Wall" x="320" y="576">
+   <polygon points="0,0 32.167,0 32.167,30 0,30"/>
+  </object>
+  <object id="170" name="Wall" x="352" y="576">
+   <polygon points="0,0 31.167,0 31.167,30 0,30"/>
+  </object>
+  <object id="171" name="Wall" x="384" y="576">
+   <polygon points="0,0 31.167,0 31.167,31 0,31"/>
+  </object>
+  <object id="172" name="Wall" x="416" y="576">
+   <polygon points="0,0 31.167,0 31.167,31 0,31"/>
+  </object>
+  <object id="173" name="Wall" x="448" y="576">
+   <polygon points="0,0 29.667,0 29.667,31 0,31"/>
+  </object>
+  <object id="174" name="Wall" x="480" y="576">
+   <polygon points="0,0 29.667,0 29.667,31 0,31"/>
+  </object>
+  <object id="175" name="Wall" x="512" y="576">
+   <polygon points="0,0 31.167,0 31.167,31 0,31"/>
+  </object>
+  <object id="176" name="Wall" x="544" y="576">
+   <polygon points="0,0 31.167,0 31.167,31 0,31"/>
+  </object>
+  <object id="177" name="Wall" x="576" y="576">
+   <polygon points="0,0 31.167,0 31.167,31 0,31"/>
+  </object>
+  <object id="178" name="Wall" x="608" y="576">
+   <polygon points="0,0 31.167,0 31.167,31 0,31"/>
+  </object>
+  <object id="179" name="Wall" x="640" y="576">
+   <polygon points="0,0 31.167,0 31.167,31 0,31"/>
+  </object>
+  <object id="180" name="Wall" x="672" y="576">
+   <polygon points="0,0 31.167,0 31.167,31 0,31"/>
+  </object>
+  <object id="181" name="Wall" x="704" y="576">
+   <polygon points="0,0 31.167,0 31.167,31 0,31"/>
+  </object>
+  <object id="182" name="Wall" x="736" y="576">
+   <polygon points="0,0 31.167,0 31.167,31 0,31"/>
+  </object>
+  <object id="183" name="Wall" x="769" y="576">
+   <polygon points="0,0 31.167,0 31.167,31 0,31"/>
   </object>
   <object id="83" name="LevelEnd" x="800" y="480">
    <polygon points="0,0 0,96 32,96 32,0"/>

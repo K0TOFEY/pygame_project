@@ -11,11 +11,20 @@ import sqlite3
 DB_NAME = "frogger_knights.db"
 
 
-def is_level_unlocked(level_number):
+# def is_level_unlocked(level_number):
+#     conn = sqlite3.connect(DB_NAME)
+#     cursor = conn.cursor()
+#     cursor.execute("SELECT COUNT(*) FROM level_progress WHERE level = ?", (level_number - 1,))
+#     count = cursor.fetchone()[0]
+#     conn.commit()
+#     conn.close()
+#     return count > 0 or level_number == 1
+def is_level_unlocked(level_number, name):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM level_progress WHERE level = ?", (level_number - 1,))
+    cursor.execute("SELECT coin FROM coin_ WHERE level = ?", (level_number - 1,))
     count = cursor.fetchone()[0]
+    conn.commit()
     conn.close()
     return count > 0 or level_number == 1
 
@@ -27,22 +36,33 @@ def mark_level_complete(level_number):
     conn.commit()
     conn.close()
 
-
-def create_level_progress_table():
+def update_bd(name, s):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS level_progress (
-            level INTEGER PRIMARY KEY,
-            completed_time REAL
-        )
-    ''')
+    if s == "coin":
+        k = cursor.execute("""SELECT coin FROM coin_death WHERE name = ?""", (name,)).fetchone()[0]
+        cursor.execute("""UPDATE coin_death SET coin = ? WHERE name = ?""", (k + 1, name))
+    elif s == "death":
+        k = cursor.execute("""SELECT death FROM coin_death WHERE name = ?""", (name,)).fetchone()[0]
+        cursor.execute("""UPDATE coin_death SET death = ? WHERE name = ?""", (k + 1, name))
+    elif s == "0":
+        cursor.execute("""UPDATE coin_death SET coin = 0, death = 0 WHERE name = ?""", (name,))
     conn.commit()
     conn.close()
 
-
-create_level_progress_table()
-
+# def add_coin():
+#     conn = sqlite3.connect(DB_NAME)
+#     cursor = conn.cursor()
+#     cursor.execute("""UPDATE coin_death SET coin = 0, death = 0 WHERE name = ?""", (name,))
+#     conn.commit()
+#     conn.close()
+#
+# def update_bd1(name):
+#     conn = sqlite3.connect(DB_NAME)
+#     cursor = conn.cursor()
+#     cursor.execute("""UPDATE coin_death SET coin = 0, death = 0 WHERE name = ?""", (name,))
+#     conn.commit()
+#     conn.close()
 
 # Вспомогательные функции
 def contour(screen, rect, first_file, second_file):  # Наводка на кнопку
@@ -56,12 +76,15 @@ def contour(screen, rect, first_file, second_file):  # Наводка на кн�
 
 def play_random_music():  # Проигрыш музыки в меню
     global current_music
-    next_music = random.choice(MENU_MUSIC)
-    if next_music != current_music:
-        pygame.mixer.music.load(next_music)
-        pygame.mixer.music.play()
-        pygame.mixer.music.set_volume(0.5)
-        current_music = next_music
+    fl = True
+    while fl:
+        next_music = random.choice(MENU_MUSIC)
+        if next_music != current_music:
+            pygame.mixer.music.load(next_music)
+            pygame.mixer.music.play()
+            pygame.mixer.music.set_volume(0.2)
+            current_music = next_music
+            fl = False
 
 
 # Класс любого спрайта
@@ -84,6 +107,7 @@ class Sprite(pygame.sprite.Sprite):
 class Frog(Sprite):
     def __init__(self, startx, starty, brick_group, spike_group, coin_group):  # Принимаем coin_group
         super().__init__("Froggo/Animation/frog.png", startx, starty)
+        global name
         self.stand_image = self.image
         self.jump_image = pygame.image.load('Froggo/Animation/jump.png')
 
@@ -192,6 +216,7 @@ class Frog(Sprite):
         for coin in self.coin_group:  # Перебираем монеты
             if self.rect.colliderect(coin.rect):  # Если игрок столкнулся с монетой
                 self.coin_sound.play() # Проигрываем звук
+                update_bd(name, "coin")
                 coin.kill()  # Удаляем монету из всех групп
 
     def walk_animation(self):
@@ -226,6 +251,7 @@ class Frog(Sprite):
         if not self.dying:  # Если анимация смерти еще не началась
             self.dying = True  # Начинаем анимацию смерти
             self.death_start_time = time.time()  # Запоминаем время начала
+            update_bd(name, "death")
             print("Персонаж умер!") # Выводим сообщение в консоль
 
     def reset(self):
@@ -244,7 +270,7 @@ class Frog(Sprite):
 class Brick(pygame.sprite.Sprite):  # Класс для кирпичей
     def __init__(self, x, y, width, height):
         super().__init__()
-        self.image = pygame.image.load('Sprites/brick_1.png')  # Загружаем текстуру
+        self.image = pygame.image.load('Sprites/stone_1.png')  # Загружаем текстуру
         self.image = pygame.transform.scale(self.image, (width, height))  # Меняем размер текстуры
         self.rect = self.image.get_rect()  # Получаем rect текстуры
         self.rect.x = x  # Указываем х rect
@@ -389,7 +415,6 @@ def main_menu(screen):
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if qt_btn_rect.collidepoint(event.pos):
-                    SOUND_ON_BUTTON.play()
                     pygame.quit()
                     sys.exit()
 
@@ -398,7 +423,7 @@ def main_menu(screen):
 
         contour(screen, qt_btn_rect, 'Buttons/click_qt_btn.png', 'Buttons/quit_btn.png')  # кнопка выйти
 
-        pygame.display.update()
+        pygame.display.flip()
 
         # Проверяем, закончилась ли музыка, и если да, то включаем следующую
         if not pygame.mixer.music.get_busy():
@@ -494,6 +519,7 @@ def lvl_page(screen):
 def start_level(screen, level_number):
     global level1_music
     global level1_music_playing
+    global name
     level1_music_playing = True
 
     pygame.mixer.music.load(MUSIC_ON_LEVEL)  # Загрузка музыки для уровня
@@ -510,6 +536,7 @@ def start_level(screen, level_number):
     while level1_music_playing:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                update_bd(name, "0")
                 pygame.quit()
                 sys.exit()
             # if event.type == pygame.KEYDOWN:
@@ -522,6 +549,7 @@ def start_level(screen, level_number):
                     SOUND_ON_BUTTON.play()
                     pygame.mixer.music.stop()  # Останавливаем музыку уровня
                     level1_music_playing = False
+                    update_bd(name, "0")
                     lvl_page(screen)
 
         # Переход на следующий уровень
@@ -582,7 +610,7 @@ MUSIC_ON_LEVEL = 'Sounds/dungeoun_music.mp3'
 DEATH_ANIMATION_DURATION = 1  # Длительность анимации смерти в секундах
 DEATH_FRAMES = 8  # Кол-во кадров смерти
 COIN_ANIMATION_SPEED = 0.2  # Скорость анимации монет
-
+name = "Tanya"
 
 # Список музыки для меню
 MENU_MUSIC = [
@@ -594,11 +622,13 @@ MENU_MUSIC = [
 # Инициализация Pygame Mixer (звук)
 pygame.mixer.init()
 SOUND_ON_BUTTON = pygame.mixer.Sound("Sounds/click_on_button.mp3")  # Звук для нажатия кнопки
-pygame.mixer.music.set_volume(1)  # Громкость трека 100%
+SOUND_ON_BUTTON.set_volume(0.1)
+pygame.mixer.music.set_volume(0.2)  # Громкость трека 100%
 
 # Создание окна
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Лягушачий рыцарь")
 
 # Переменная для текущей музыки
 # Запоменает текущий играющий трек, чтобы избежать повторного воспроизведения одного и того же трека подряд
