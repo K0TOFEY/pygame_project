@@ -31,12 +31,7 @@ def mark_level_complete(level_number):
 def create_level_progress_table():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS level_progress (
-            level INTEGER PRIMARY KEY,
-            completed_time REAL
-        )
-    ''')
+    cursor.execute('''CREATE TABLE IF NOT EXISTS level_progress (level INTEGER PRIMARY KEY,completed_time REAL)''')
     conn.commit()
     conn.close()
 
@@ -82,7 +77,7 @@ class Sprite(pygame.sprite.Sprite):
 
 # Класс персонажа
 class Frog(Sprite):
-    def __init__(self, startx, starty, brick_group, spike_group, coin_group):  # Принимаем coin_group
+    def __init__(self, startx, starty, brick_group, spike_group, coin_group, door_group):  # Принимаем coin_group
         super().__init__("Froggo/Animation/frog.png", startx, starty)
         self.stand_image = self.image
         self.jump_image = pygame.image.load('Froggo/Animation/jump.png')
@@ -104,7 +99,8 @@ class Frog(Sprite):
         self.map = None  # Добавлено поле для хранения ссылки на карту
         self.brick_group = brick_group  # Спрайт группа кирпичей
         self.spike_group = spike_group  # Сохраняем ссылку на группу шипов
-        self.coin_group = coin_group # Сохраняем группу монет
+        self.coin_group = coin_group  # Сохраняем группу монет
+        self.door_group = door_group
         self.is_jumping = False
         self.dying = False  # Флаг, показывающий, что началась анимация смерти
         self.death_start_time = 0  # Время начала анимации смерти
@@ -244,7 +240,7 @@ class Frog(Sprite):
 class Brick(pygame.sprite.Sprite):  # Класс для кирпичей
     def __init__(self, x, y, width, height):
         super().__init__()
-        self.image = pygame.image.load('Sprites/brick_3.png')  # Загружаем текстуру
+        self.image = pygame.image.load('Sprites/brick_4.png')  # Загружаем текстуру
         self.image = pygame.transform.scale(self.image, (width, height))  # Меняем размер текстуры
         self.rect = self.image.get_rect()  # Получаем rect текстуры
         self.rect.x = x  # Указываем х rect
@@ -256,6 +252,16 @@ class Spike(pygame.sprite.Sprite):  # Класс для шипов
         super().__init__()
         self.image = pygame.image.load('Sprites/spike.png')  # Загружаем текстуру шипа
         self.image = pygame.transform.scale(self.image, (32, 32))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+
+
+class Door(pygame.sprite.Sprite):  # Класс для двери
+    def __init__(self, x, y, width, height):
+        super().__init__()
+        self.image = pygame.image.load('Sprites/door1.png')  # Загружаем текстуру двери
+        self.image = pygame.transform.scale(self.image, (width, height))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
@@ -293,6 +299,7 @@ class Map():
         self.brick_group = pygame.sprite.Group()  # Группа спрайтов для кирпичей
         self.spike_group = pygame.sprite.Group()  # Группа спрайтов для шипов
         self.coin_group = pygame.sprite.Group()  # Группа спрайтов для монет
+        self.door_group = pygame.sprite.Group()  # Группа спрайтов для двери
         self.all_sprites = pygame.sprite.Group()
         self.collision_layer = self.tmx_data.get_layer_by_name('Tiles')  # или другое имя слоя с коллизиями
         self.map_image = self.make_map()  # Создаем единое изображение карты
@@ -312,7 +319,7 @@ class Map():
         for obj in self.tmx_data.objects:
             if obj.name == "Wall":
                 brick = Brick(obj.x, obj.y, obj.width, obj.height)
-                self.brick_group.add(brick)  #  Добавляем кирпич в группу
+                self.brick_group.add(brick)  # Добавляем кирпич в группу
             elif obj.name == "Spike":
                 spike = Spike(obj.x, obj.y, obj.width, obj.height)  # Создаем шип
                 self.spike_group.add(spike)  # Добавляем шип в группу шипов
@@ -321,17 +328,22 @@ class Map():
                 coin = Money(obj.x, obj.y)
                 self.coin_group.add(coin)
                 self.all_sprites.add(coin)
+            elif obj.name == "Door":
+                door = Door(obj.x, obj.y, obj.width, obj.height)
+                self.all_sprites.add(door)
 
         return temp_surface
 
     def render(self, surface):
         surface.blit(self.map_image, (0, 0))
-        for brick in self.brick_group: # Отрисовываем кирпичи
+        for brick in self.brick_group:  # Отрисовываем кирпичи
             surface.blit(brick.image, brick.rect)  # Рисуем
         for spike in self.spike_group:  # Отрисовываем шипы
             surface.blit(spike.image, spike.rect)
         for coin in self.coin_group:
             surface.blit(coin.image, coin.rect) # Отрисовываем монеты
+        for door in self.door_group:
+            surface.blit(door.image, door.rect)
 
     def get_collision(self):
         return self.collision_layer
@@ -339,7 +351,7 @@ class Map():
     def view_player(self):
         for obj in self.tmx_data.objects:
             if obj.name == "Player":
-                self.Player = Frog(obj.x, obj.y, self.brick_group, self.spike_group, self.coin_group)  # Передаем группу с кирпичами и шипами
+                self.Player = Frog(obj.x, obj.y, self.brick_group, self.spike_group, self.coin_group, self.door_group)  # Передаем группу с кирпичами и шипами
                 self.Player.map = self  # Присваиваем ссылку на карту игроку
                 self.all_sprites.add(self.Player)
                 break
@@ -503,6 +515,7 @@ def start_level(screen, level_number):
     rect_back = back.get_rect(topleft=(10, 25))
 
     level_map = Map(f"Tiledmap/tmx/test_map{level_number}.tmx")
+    sprites = level_map.coin_group
     level_map.view_player()
 
     player = level_map.Player
@@ -525,18 +538,19 @@ def start_level(screen, level_number):
                     lvl_page(screen)
 
         # Переход на следующий уровень
-        if player.rect.right >= WIDTH:
+        if player.rect.right >= WIDTH and not sprites:  # ToDo and coins < 3 to pass
             # Обновление бд
             mark_level_complete(level_number)  # Отмечаем прохождение уровня
             pygame.mixer.music.stop()  # останавливаем трек
             level1_music_playing = False  # переключаем флаг
-
             if level_number < 3:
                 # Если не последний уровень - запускаем следующий уровень
                 start_level(screen, level_number + 1)
-            else: # Если последний уровень - возвращаемся в меню выбора уровня.
+            else:  # Если последний уровень - возвращаемся в меню выбора уровня.
                 lvl_page(screen)
-            return # Иначе код не работает
+            return  # Иначе код не работает
+        elif player.rect.right >= WIDTH and sprites:
+            player.reset()
 
         # Наводка на кнопку
         contour(screen, rect_back, 'Buttons/cl_back.png', 'Buttons/back.png')
