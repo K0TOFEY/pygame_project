@@ -244,7 +244,7 @@ class Frog(Sprite):
 class Brick(pygame.sprite.Sprite):  # Класс для кирпичей
     def __init__(self, x, y, width, height):
         super().__init__()
-        self.image = pygame.image.load('Sprites/brick_1.png')  # Загружаем текстуру
+        self.image = pygame.image.load('Sprites/brick_3.png')  # Загружаем текстуру
         self.image = pygame.transform.scale(self.image, (width, height))  # Меняем размер текстуры
         self.rect = self.image.get_rect()  # Получаем rect текстуры
         self.rect.x = x  # Указываем х rect
