@@ -8,32 +8,39 @@ import sqlite3
 
 # Работа с БД
 # База данных
-DB_NAME = "frogger_knights.db"
+DB_NAME = "frogger_knights.db"  # Имя файла базы данных SQLite
 
 
 def is_level_unlocked(level_number):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
+    """Проверяет, разблокирован ли уровень. Уровень считается разблокированным, если пройден предыдущий."""
+    conn = sqlite3.connect(DB_NAME)  # Подключение к базе данных
+    cursor = conn.cursor()  # Создание объекта курсора для выполнения SQL-запросов
+    # Выполнение SQL-запроса, считающего количество записей в таблице level_progress для предыдущего уровня
     cursor.execute("SELECT COUNT(*) FROM level_progress WHERE level = ?", (level_number - 1,))
-    count = cursor.fetchone()[0]
-    conn.close()
+    count = cursor.fetchone()[0]  # Получение результата запроса (количество записей)
+    conn.close()  # Закрытие соединения с базой данных
+    # Возвращает True, если предыдущий уровень пройден (количество записей > 0) или это первый уровень (level_number == 1)
     return count > 0 or level_number == 1
 
 
 def mark_level_complete(level_number):
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
+    """Отмечает уровень как пройденный, добавляя запись в таблицу level_progress."""
+    conn = sqlite3.connect(DB_NAME)  # Подключение к базе данных
+    cursor = conn.cursor()  # Создание объекта курсора
+    # Выполнение SQL-запроса, добавляющего запись в таблицу level_progress.  INSERT OR IGNORE предотвращает добавление дубликатов.
     cursor.execute("INSERT OR IGNORE INTO level_progress (level, completed_time) VALUES (?, ?)", (level_number, time.time()))
-    conn.commit()
-    conn.close()
+    conn.commit()  # Фиксация изменений в базе данных
+    conn.close()  # Закрытие соединения
 
 
 def create_level_progress_table():
-    conn = sqlite3.connect(DB_NAME)
-    cursor = conn.cursor()
+    """Создает таблицу level_progress в базе данных, если она еще не существует."""
+    conn = sqlite3.connect(DB_NAME)  # Подключение к базе данных
+    cursor = conn.cursor()  # Создание объекта курсора
+    # Выполнение SQL-запроса, создающего таблицу level_progress.  IF NOT EXISTS предотвращает попытку создания таблицы, если она уже существует.
     cursor.execute('''CREATE TABLE IF NOT EXISTS level_progress (level INTEGER PRIMARY KEY,completed_time REAL)''')
-    conn.commit()
-    conn.close()
+    conn.commit()  # Фиксация изменений
+    conn.close()  # Закрытие соединения
 
 
 create_level_progress_table()
@@ -41,38 +48,39 @@ create_level_progress_table()
 
 # Вспомогательные функции
 def contour(screen, rect, first_file, second_file):  # Наводка на кнопку
-    if rect.collidepoint(pygame.mouse.get_pos()):
-        btn = pygame.image.load(f"{first_file}")
-        screen.blit(btn, rect)
-    else:
-        btn = pygame.image.load(f"{second_file}")
-        screen.blit(btn, rect)
+    """Делает эффект наводки на кнопку"""
+    if rect.collidepoint(pygame.mouse.get_pos()):  # Проверяем, находится ли курсор мыши над кнопкой
+        btn = pygame.image.load(f"{first_file}")  # Загружаем изображение для состояния "наведена мышь"
+        screen.blit(btn, rect)  # Отображаем изображение на экране
+    else:  # Если курсор мыши не над кнопкой
+        btn = pygame.image.load(f"{second_file}")  # Загружаем изображение для обычного состояния
+        screen.blit(btn, rect)  # Отображаем изображение на экране
 
 
 def play_random_music():  # Проигрыш музыки в меню
-    global current_music
-    next_music = random.choice(MENU_MUSIC)
-    if next_music != current_music:
-        pygame.mixer.music.load(next_music)
-        pygame.mixer.music.play()
-        pygame.mixer.music.set_volume(0.5)
-        current_music = next_music
+    """Воспроизводит случайную музыку из списка MENU_MUSIC в меню."""
+    global current_music  # Используем глобальную переменную current_music, чтобы запоминать текущую музыку
+    next_music = random.choice(MENU_MUSIC)  # Выбираем случайный трек из списка MENU_MUSIC
+    if next_music != current_music:  # Проверяем, чтобы следующий трек не был таким же, как текущий
+        pygame.mixer.music.load(next_music)  # Загружаем выбранный трек в проигрыватель
+        pygame.mixer.music.play()  # Запускаем воспроизведение трека
+        pygame.mixer.music.set_volume(0.5)  # Устанавливаем громкость трека на 50%
+        current_music = next_music  # Обновляем значение current_music, чтобы запомнить, какой трек сейчас играет
 
 
 # Класс любого спрайта
 class Sprite(pygame.sprite.Sprite):
     def __init__(self, image, startx, starty):
-        super().__init__()
-        self.image = pygame.image.load(image)  # Загрузка изображения
-        self.rect = self.image.get_rect()  # Rect этого изображения
+        super().__init__()  # Вызываем конструктор родительского класса pygame.sprite.Sprite
+        self.image = pygame.image.load(image)  # Загрузка изображения спрайта из файла
+        self.rect = self.image.get_rect()  # Создание объекта Rect на основе загруженного изображения. Rect используется для определения позиции и размеров спрайта.
+        self.rect.center = [startx, starty]  # Установка центра Rect (а значит и спрайта) в указанные координаты
 
-        self.rect.center = [startx, starty]  # Центр rect размещаем на стартовых координатах
+    def update(self):
+        pass  # В базовом классе ничего не делает
 
-    def update(self):  # Пустая функция апдейта
-        pass
-
-    def draw(self, screen):  # Функция рисования спрайта
-        screen.blit(self.image, self.rect)
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)  # Отображает изображение спрайта на экране в позиции, определяемой Rect
 
 
 # Класс персонажа

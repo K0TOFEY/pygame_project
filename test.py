@@ -1,1 +1,1 @@
-print("kupola")
+print("Hello, moderator :)")
