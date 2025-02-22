@@ -271,7 +271,7 @@ class Brick(pygame.sprite.Sprite):  # Класс для кирпичей
     def __init__(self, x, y, width, height):
         super().__init__()
         self.image = pygame.image.load('Sprites/stone_1.png')  # Загружаем текстуру
-        self.image = pygame.transform.scale(self.image, (width, height))  # Меняем размер текстуры
+        self.image = pygame.transform.scale(self.image, (32, 32))  # Меняем размер текстуры
         self.rect = self.image.get_rect()  # Получаем rect текстуры
         self.rect.x = x  # Указываем х rect
         self.rect.y = y  # Указываем y rect
