@@ -526,6 +526,7 @@ def start_level(screen, level_number):
 
         # Переход на следующий уровень
         if player.rect.right >= WIDTH:
+            # Обновление бд
             mark_level_complete(level_number)  # Отмечаем прохождение уровня
             pygame.mixer.music.stop()  # останавливаем трек
             level1_music_playing = False  # переключаем флаг
