@@ -396,6 +396,8 @@ def main_menu(screen):
 
     st_btn = pygame.image.load("Buttons/start_btn.png")  # Загружаем изображение кнопки "Старт"
     qt_btn = pygame.image.load("Buttons/quit_btn.png")  # Загружаем изображение кнопки "Выход"
+    login_btn = pygame.image.load("Buttons/login.png")  # Загружаем изображение кнопки "Пользователь"
+    record_btn = pygame.image.load("Buttons/record.png")  # Загружаем изображение кнопки "Рекорд"
 
     # Фон
     bg = pygame.image.load(BACKGROUND_FOR_MENU)  # Загружаем изображение фона для меню
@@ -403,11 +405,12 @@ def main_menu(screen):
     screen.blit(bg, (0, 0))  # Отображаем фон на экране
 
     # Buttons
-    st_btn_rect = st_btn.get_rect(topleft=(100, 250))  # Создаем Rect для кнопки "Старт" и задаем её позицию
-    qt_btn_rect = qt_btn.get_rect(topleft=(100, 350))  # Создаем Rect для кнопки "Выход" и задаем её позицию
+    st_btn_rect = st_btn.get_rect(topleft=(100, 210))  # Создаем Rect для кнопки "Старт" и задаем её позицию
+    qt_btn_rect = qt_btn.get_rect(topleft=(100, 300))  # Создаем Rect для кнопки "Выход" и задаем её позицию
+    log_btn_rect = login_btn.get_rect(topleft=(110, 380))  # Создаем Rect для кнопки "Пользователь" и задаем её позицию
+    rec_btn_rect = record_btn.get_rect(topleft=(210, 380))  # Создаем Rect для кнопки "Рекорд" и задаем её позицию
 
     # Работа над текстом
-    # БД
     font = pygame.font.Font(None, 52)  # Создаём шрифт
     text = font.render("Проклятие лягушачьего рыцаря", True, (255, 255, 255))  # Создаем текст
     text_x = 125  # X-координата текста
@@ -417,6 +420,8 @@ def main_menu(screen):
     screen.blit(text, (text_x, text_y))  # Отображаем текст на экране
     screen.blit(st_btn, st_btn_rect)  # Отображаем кнопку "Старт" на экране
     screen.blit(qt_btn, qt_btn_rect)  # Отображаем кнопку "Выход" на экране
+    screen.blit(login_btn, log_btn_rect)  # Отображаем кнопку "Пользователь" на экране
+    screen.blit(record_btn, rec_btn_rect)  # Отображаем кнопку "Рекорд" на экране
     # смена (отрисовка) кадра:
     pygame.display.flip()  # Обновляем экран
 
@@ -443,6 +448,10 @@ def main_menu(screen):
         contour(screen, st_btn_rect, 'Buttons/click_start_btn.png', 'Buttons/start_btn.png')  # Отображаем кнопку "Старт" с эффектом наведения
 
         contour(screen, qt_btn_rect, 'Buttons/click_qt_btn.png', 'Buttons/quit_btn.png')  # Отображаем кнопку "Выход" с эффектом наведения
+
+        contour(screen, log_btn_rect, 'Buttons/click_login.png', 'Buttons/login.png')  # Отображаем кнопку "Пользователь" с эффектом наведения
+
+        contour(screen, rec_btn_rect, 'Buttons/click_record.png', 'Buttons/record.png')  # Отображаем кнопку "Рекорд" с эффектом наведения
 
         pygame.display.update()  # Обновляем экран
 
