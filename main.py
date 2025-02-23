@@ -407,6 +407,7 @@ def main_menu(screen):
     qt_btn_rect = qt_btn.get_rect(topleft=(100, 350))  # Создаем Rect для кнопки "Выход" и задаем её позицию
 
     # Работа над текстом
+    # БД
     font = pygame.font.Font(None, 52)  # Создаём шрифт
     text = font.render("Проклятие лягушачьего рыцаря", True, (255, 255, 255))  # Создаем текст
     text_x = 125  # X-координата текста
