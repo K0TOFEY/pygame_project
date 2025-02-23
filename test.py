@@ -1,1 +1,1 @@
-print("Hello, moderator :)")
+print("HELLO MODERATOR ^))))))")
