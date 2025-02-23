@@ -444,6 +444,18 @@ def main_menu(screen):
                     pygame.quit()  # Завершаем работу Pygame
                     sys.exit()  # Завершаем работу программы
 
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:   # Если нажата левая кнопка мыши
+                if log_btn_rect.colliderect(event.pos):  # Если клик пришелся на кнопку "Пользователь"
+                    SOUND_ON_BUTTON.play()  # Проигрываем звук нажатия кнопки
+                    # ToDo прототип регистрации
+                    pass
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:   # Если нажата левая кнопка мыши
+                if rec_btn_rect.colliderect(event.pos):  # Если клик пришелся на кнопку "Рекорд"
+                    SOUND_ON_BUTTON.play()  # Проигрываем звук нажатия кнопки
+                    # ToDo прототип рекорда
+                    pass
+
         # Наводка на кнопку
         contour(screen, st_btn_rect, 'Buttons/click_start_btn.png', 'Buttons/start_btn.png')  # Отображаем кнопку "Старт" с эффектом наведения
 
