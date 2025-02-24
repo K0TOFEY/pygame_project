@@ -13,37 +13,40 @@ DB_NAME = "frogger_knights.db"  # Имя файла базы данных SQLite
 
 def is_level_unlocked(level_number):
     """Проверяет, разблокирован ли уровень. Уровень считается разблокированным, если пройден предыдущий."""
-    conn = sqlite3.connect(DB_NAME)  # Подключение к базе данных
-    cursor = conn.cursor()  # Создание объекта курсора для выполнения SQL-запросов
-    # Выполнение SQL-запроса, считающего количество записей в таблице level_progress для предыдущего уровня
-    cursor.execute("SELECT COUNT(*) FROM level_progress WHERE level = ?", (level_number - 1,))
-    count = cursor.fetchone()[0]  # Получение результата запроса (количество записей)
-    conn.close()  # Закрытие соединения с базой данных
-    # Возвращает True, если предыдущий уровень пройден (количество записей > 0) или это первый уровень (level_number == 1)
-    return count > 0 or level_number == 1
+    coins = update_bd(name, "how_coins", 0)
+    if coins >= (level_number - 1) * 3:
+        return True
+    return False
 
 
-def mark_level_complete(level_number):
-    """Отмечает уровень как пройденный, добавляя запись в таблицу level_progress."""
-    conn = sqlite3.connect(DB_NAME)  # Подключение к базе данных
-    cursor = conn.cursor()  # Создание объекта курсора
-    # Выполнение SQL-запроса, добавляющего запись в таблицу level_progress.  INSERT OR IGNORE предотвращает добавление дубликатов.
-    cursor.execute("INSERT OR IGNORE INTO level_progress (level, completed_time) VALUES (?, ?)", (level_number, time.time()))
-    conn.commit()  # Фиксация изменений в базе данных
-    conn.close()  # Закрытие соединения
-
-
-def create_level_progress_table():
-    """Создает таблицу level_progress в базе данных, если она еще не существует."""
-    conn = sqlite3.connect(DB_NAME)  # Подключение к базе данных
-    cursor = conn.cursor()  # Создание объекта курсора
-    # Выполнение SQL-запроса, создающего таблицу level_progress.  IF NOT EXISTS предотвращает попытку создания таблицы, если она уже существует.
-    cursor.execute('''CREATE TABLE IF NOT EXISTS level_progress (level INTEGER PRIMARY KEY,completed_time REAL)''')
-    conn.commit()  # Фиксация изменений
-    conn.close()  # Закрытие соединения
-
-
-create_level_progress_table()
+def update_bd(name, s, n):
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    if s == "coin":
+        k = cursor.execute("""SELECT coin FROM record WHERE name = ?""", (name,)).fetchone()
+        if k:
+            cursor.execute("""UPDATE record SET coin = ? WHERE name = ?""", (n, name))
+        else:
+            cursor.execute("""INSERT INTO record(coin, name) VALUES(?, ?)""", (n, name))
+    elif s == "death":
+        k = cursor.execute("""SELECT count FROM death WHERE name = ?""", (name,)).fetchone()[0]
+        cursor.execute("""UPDATE death SET count = ? WHERE name = ?""", (k + 1, name))
+    elif s == "death_0":
+        k = cursor.execute("""SELECT count FROM death WHERE name = ?""", (name,)).fetchone()
+        if k:
+            cursor.execute("""UPDATE death SET count = 0 WHERE name = ?""", (name,))
+        else:
+            cursor.execute("""INSERT INTO death(name, count) VALUES(?, ?)""", (name, 0))
+    elif s == "how_coins":
+        k = cursor.execute("""SELECT coin FROM record WHERE name = ?""", (name,)).fetchone()
+        if k:
+            return k[0]
+        return 0
+    elif s == "record":
+        k = cursor.execute("""SELECT name FROM record WHERE coin = 9 ORDER BY deaths""").fetchall()
+        return k
+    conn.commit()
+    conn.close()
 
 
 # Вспомогательные функции
@@ -64,7 +67,7 @@ def play_random_music():  # Проигрыш музыки в меню
     if next_music != current_music:  # Проверяем, чтобы следующий трек не был таким же, как текущий
         pygame.mixer.music.load(next_music)  # Загружаем выбранный трек в проигрыватель
         pygame.mixer.music.play()  # Запускаем воспроизведение трека
-        pygame.mixer.music.set_volume(0.5)  # Устанавливаем громкость трека на 50%
+        pygame.mixer.music.set_volume(0.02)  # Устанавливаем громкость трека на 50%
         current_music = next_music  # Обновляем значение current_music, чтобы запомнить, какой трек сейчас играет
 
 
@@ -85,7 +88,7 @@ class Sprite(pygame.sprite.Sprite):
 
 # Класс персонажа
 class Frog(Sprite):
-    def __init__(self, startx, starty, brick_group, spike_group, coin_group, door_group):  # Принимаем coin_group
+    def __init__(self, startx, starty, brick_group, spike_group, coin_group, door_group, level_num):  # Принимаем coin_group
         super().__init__("Froggo/Animation/frog.png", startx, starty)
         self.stand_image = self.image  # Изображение лягушки в состоянии покоя
         self.jump_image = pygame.image.load('Froggo/Animation/jump.png')  # Изображение лягушки в прыжке
@@ -116,6 +119,7 @@ class Frog(Sprite):
         self.death_frame_duration = DEATH_ANIMATION_DURATION / DEATH_FRAMES  # Длительность одного кадра анимации смерти
         self.last_death_frame_time = 0  # Время отображения последнего кадра анимации смерти
         self.coin_sound = pygame.mixer.Sound("Sounds/money_music.mp3")  # Загрузка звука при столкновении с монетой
+        self.level_num = level_num
 
     def update(self):
         if self.dying:
@@ -222,19 +226,13 @@ class Frog(Sprite):
     def death_animation(self):
         # Проверяем, прошло ли достаточно времени с момента отображения последнего кадра анимации смерти
         if time.time() - self.last_death_frame_time > self.death_frame_duration:
-            # Обновляем время последнего отображенного кадра
             self.last_death_frame_time = time.time()
-            # Получаем текущий кадр анимации смерти из списка dead_cycle
             self.image = self.dead_cycle[self.death_animation_index]
-            # Увеличиваем индекс анимации смерти
             self.death_animation_index += 1
-            # Если достигли конца анимации смерти
-            if self.death_animation_index >= len(self.dead_cycle):
-                # Обнуляем индекс анимации
+            if self.death_animation_index >= len(self.dead_cycle): # Если достигли конца анимации смерти
                 self.death_animation_index = 0
-                # Устанавливаем флаг dying в False, чтобы прекратить анимацию смерти
-                self.dying = False
-                # Вызываем метод reset для возвращения лягушки в начальное состояние
+                self.dying = False # Устанавливаем флаг dying в False, чтобы прекратить анимацию смерти
+                update_bd(name, "death", self.level_num)
                 self.reset()
 
     def on_ground(self):
@@ -314,13 +312,14 @@ class Money(pygame.sprite.Sprite):
 
 # Класс уровней
 class Map():
-    def __init__(self, filename):
+    def __init__(self, filename, level_num):
         self.tmx_data = pytmx.load_pygame(filename)  # Загружаем TMX-файл с использованием pytmx
         self.tile_width = self.tmx_data.tilewidth  # Получаем ширину тайла из данных TMX
         self.tile_height = self.tmx_data.tileheight  # Получаем высоту тайла из данных TMX
         self.width = self.tmx_data.width  # Получаем ширину карты в тайлах из данных TMX
         self.height = self.tmx_data.height  # Получаем высоту карты в тайлах из данных TMX
         self.layers = self.tmx_data.layers  # Получаем список слоев карты из данных TMX
+        self.level_num = level_num
         self.brick_group = pygame.sprite.Group()  # Группа спрайтов для кирпичей
         self.spike_group = pygame.sprite.Group()  # Группа спрайтов для шипов
         self.coin_group = pygame.sprite.Group()  # Группа спрайтов для монет
@@ -382,7 +381,7 @@ class Map():
             if obj.name == "Player":  # Если имя объекта "Player" (т.е. это объект, обозначающий стартовую позицию)
                 # Создаем объект Frog, передавая координаты объекта "Player" и группы спрайтов
                 self.Player = Frog(obj.x, obj.y, self.brick_group, self.spike_group, self.coin_group,
-                                   self.door_group)  # Передаем группу с кирпичами и шипами
+                                   self.door_group, self.level_num)  # Передаем группу с кирпичами и шипами
                 self.Player.map = self  # Устанавливаем ссылку на текущую карту в объекте игрока (для доступа к данным карты из игрока)
                 self.all_sprites.add(self.Player)  # Добавляем игрока в группу всех спрайтов
                 break  # Прекращаем перебор объектов, т.к. игрок создан и добавлен
@@ -440,9 +439,14 @@ def main_menu(screen):
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Если нажата левая кнопка мыши
                 if qt_btn_rect.collidepoint(event.pos):  # Если клик пришелся на кнопку "Выход"
-                    SOUND_ON_BUTTON.play()  # Проигрываем звук нажатия кнопки
-                    pygame.quit()  # Завершаем работу Pygame
-                    sys.exit()  # Завершаем работу программы
+                    SOUND_ON_BUTTON.play()
+                    pygame.quit()
+                    sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Если нажата левая кнопка мыши
+                if rec_btn_rect.collidepoint(event.pos):
+                    SOUND_ON_BUTTON.play()
+                    record(screen)
 
         # Наводка на кнопку
         contour(screen, st_btn_rect, 'Buttons/click_start_btn.png', 'Buttons/start_btn.png')  # Отображаем кнопку "Старт" с эффектом наведения
@@ -516,19 +520,19 @@ def lvl_page(screen):
                     SOUND_ON_BUTTON.play()  # Проигрываем звук нажатия кнопки
                     start_level(screen, 1)  # Запускаем уровень 1
 
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Если нажата левая кнопка мыши
-                if rect_level_2.collidepoint(event.pos) and is_level_unlocked(2):  # Если клик пришелся на кнопку уровня 2 и уровень разблокирован
-                    SOUND_ON_BUTTON.play()  # Проигрываем звук нажатия кнопки
-                    start_level(screen, 2)  # Запускаем уровень 2
-                elif rect_level_2.collidepoint(event.pos):  # Если клик пришелся на кнопку уровня 2, но уровень заблокирован
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if rect_level_2.collidepoint(event.pos) and is_level_unlocked(2):  # Если клик пришелся на кнопку уровня 2
+                    SOUND_ON_BUTTON.play()
+                    start_level(screen, 2)
+                elif rect_level_2.collidepoint(event.pos):
                     print("Этот уровень заблокирован")  # Выводим сообщение в консоль
 
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Если нажата левая кнопка мыши
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if rect_level_3.collidepoint(event.pos) and is_level_unlocked(3):  # Если клик пришелся на кнопку уровня 3 и уровень разблокирован
-                    SOUND_ON_BUTTON.play()  # Проигрываем звук нажатия кнопки
-                    start_level(screen, 3)  # Запускаем уровень 3
+                    SOUND_ON_BUTTON.play()
+                    start_level(screen, 3)
                 elif rect_level_3.collidepoint(event.pos):  # Если клик пришелся на кнопку уровня 3, но уровень заблокирован
-                    print("Этот уровень заблокирован")  # Выводим сообщение в консоль
+                    print("Этот уровень заблокирован")
 
         # Наводка на кнопки
         contour(screen, rect_level_1, 'Buttons/cl_lvl1.png', 'Buttons/lvl1.png')  # Отображаем кнопку уровня 1 с эффектом наведения
@@ -550,6 +554,7 @@ def lvl_page(screen):
 def start_level(screen, level_number):
     global level1_music  # Используем глобальную переменную для музыки уровня 1 (если она есть)
     global level1_music_playing  # Используем глобальную переменную для отслеживания состояния проигрывания музыки уровня 1
+    global name
 
     level1_music_playing = True  # Устанавливаем флаг проигрывания музыки уровня в True
 
@@ -559,11 +564,17 @@ def start_level(screen, level_number):
     back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
     rect_back = back.get_rect(topleft=(10, 25))  # Создаем Rect для кнопки "Назад" и задаем её позицию
 
-    level_map = Map(f"Tiledmap/tmx/test_map{level_number}.tmx")  # Создаем объект Map, загружая карту уровня из TMX-файла
+    coin = update_bd(name, "how_coins", 0)
+    if coin >= level_number * 3:
+        level_map = Map(f"Tiledmap/tmx/coin_map{level_number}.tmx", level_number)
+    else:
+        level_map = Map(f"Tiledmap/tmx/test_map{level_number}.tmx", level_number)  # Создаем объект Map, загружая карту уровня из TMX-файла
     sprites = level_map.coin_group  # Получаем группу спрайтов монет из карты уровня
     level_map.view_player()  # Создаем объект игрока (Frog) на карте уровня
 
     player = level_map.Player  # Получаем ссылку на объект игрока из карты уровня
+
+    update_bd(name, "death_0", 0)
 
     while level1_music_playing:  # Главный цикл игрового уровня (пока музыка уровня проигрывается)
         for event in pygame.event.get():  # Обрабатываем события
@@ -580,8 +591,7 @@ def start_level(screen, level_number):
 
         # Переход на следующий уровень
         if player.rect.right >= WIDTH and not sprites:  # Если игрок достиг правой границы экрана и все монеты собраны
-            # ToDo обновление базы данных
-            mark_level_complete(level_number)  # Отмечаем прохождение уровня
+            update_bd(name, "coin", n=level_number * 3)
             pygame.mixer.music.stop()  # останавливаем трек
             level1_music_playing = False  # Устанавливаем флаг проигрывания музыки уровня в False
             if level_number < 3:  # Если не последний уровень
@@ -614,7 +624,60 @@ def start_level(screen, level_number):
         pygame.display.flip()  # Обновляем экран
 
 
-# -------------- Функция уровня 1
+# Функция окна с рекордами
+def record(screen):
+    global current_music  # Используем глобальную переменную для отслеживания текущей музыки
+
+    bg = pygame.image.load(BACKGROUND_FOR_RECORD)  # Загружаем изображение фона для рекордов
+    screen.blit(bg, (0, 0))  # Отображаем фон на экране
+
+    # Кнопка
+    back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
+    rect_back = back.get_rect(topleft=(10, 45))
+    screen.blit(back, rect_back)  # Отображаем кнопку "Назад" на экране
+
+    records = update_bd(True, "record", 0)
+    # текст
+    font = pygame.font.Font(None, 52)
+    text = font.render("Рекорды", True, (255, 255, 255))
+    text_x = 400 - text.get_width() // 2
+    text_y = 70
+    screen.blit(text, (text_x, text_y))
+    for i in range(5):
+        if i < len(records):
+            text_rec = font.render(str(i + 1) + ") " + records[i][0], True, (255, 255, 255))
+            text_rec_x = 400 - text_rec.get_width() // 2
+            text_rec_y = 145 + i * 75
+            screen.blit(text_rec, (text_rec_x, text_rec_y))
+        else:
+            pass
+
+    pygame.display.flip()  # Обновляем экран
+    running = True
+    while running:
+        clock.tick(60)  # Устанавливаем максимальную частоту кадров в 60 FPS
+        for event in pygame.event.get():  # Обрабатываем события
+            if event.type == pygame.QUIT:  # Если пользователь закрыл окно
+                pygame.quit()  # Завершаем работу Pygame
+                sys.exit()  # Завершаем работу программы
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Если нажата левая кнопка мыши
+                if rect_back.collidepoint(event.pos):  # Если клик пришелся на кнопку "Назад"
+                    SOUND_ON_BUTTON.play()  # Проигрываем звук нажатия кнопки
+                    main_menu(screen)  # Возвращаемся в главное меню
+
+        contour(screen, rect_back, 'Buttons/cl_back.png',
+                'Buttons/back.png')  # Отображаем кнопку "Назад" с эффектом наведения
+
+        pygame.display.update()
+
+        # Проверяем, закончилась ли музыка, и если да, то включаем следующую
+    if not pygame.mixer.music.get_busy():  # Если музыка не проигрывается
+        play_random_music()  # Запускаем случайный трек из списка
+
+
+
+    # -------------- Функция уровня 1
 def level1(screen):
     start_level(screen, 1)
 
@@ -637,9 +700,11 @@ HEIGHT = 600  # Высота окна
 BACKGROUND = 'black'  # Чёрный цвет для заднего фона
 BACKGROUND_FOR_MENU = 'Backgrounds/menu_bg.jpg'  # Путь к изображению фона для меню
 MUSIC_ON_LEVEL = 'Sounds/dungeoun_music.mp3'  # Путь к музыкальному файлу для уровня
+BACKGROUND_FOR_RECORD = "Backgrounds/record_fon.jpg"
 DEATH_ANIMATION_DURATION = 1  # Длительность анимации смерти в секундах
 DEATH_FRAMES = 8  # Кол-во кадров смерти
 COIN_ANIMATION_SPEED = 0.2  # Скорость анимации монет
+name = "Юрка"
 
 # Список музыки для меню
 MENU_MUSIC = [
