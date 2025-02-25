@@ -464,14 +464,6 @@ def main_menu(screen):
                 pygame.quit()  # Завершаем работу Pygame
                 sys.exit()  # Завершаем работу программы
 
-            # if pygame.mouse.get_focused():    # Проверяем, находится ли мышь внутри окна
-            #     cursor_rect.center = pygame.mouse.get_pos()  # Получаем позицию курсора
-            #     pygame.mouse.set_visible(False)
-            #     draw()
-            #     screen.blit(cursor_image, cursor_rect)
-            # else:
-            #     pass
-
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Если нажата левая кнопка мыши
                 if st_btn_rect.collidepoint(event.pos):  # Если клик пришелся на кнопку "Старт"
                     SOUND_ON_BUTTON.play()  # Проигрываем звук нажатия кнопки
@@ -729,34 +721,77 @@ def record(screen):
 
 def login(screen):
     global current_music  # Используем глобальную переменную для отслеживания текущей музыки
+    global name
 
     bg = pygame.image.load(BACKGROUND_FOR_LOGIN)  # Загружаем изображение фона для логина
-    screen.blit(bg, (0, 0))  # Отображаем фон на экране
 
-    # Кнопка
+    # Кнопки
     back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
     rect_back = back.get_rect(topleft=(10, 45))
-    screen.blit(back, rect_back)  # Отображаем кнопку "Назад" на экране
+
+    save = pygame.image.load("Buttons/save_btn.png")  # Загружаем изображение кнопки "Сохранить"
+    rect_save = back.get_rect(topleft=(300, 340))
 
     # текст
     font = pygame.font.Font(None, 52)
-    text = font.render("Авторизация", True, (255, 255, 255))
-    text_x = 400 - text.get_width() // 2
-    text_y = 70
-    screen.blit(text, (text_x, text_y))
+    avt = font.render("Авторизация", True, pygame.Color('#71f0f0'))
+    avt_x = 400 - avt.get_width() // 2
+    avt_y = 150
+
+    clock = pygame.time.Clock()
+    input_box = pygame.Rect(200, 240, 407, 52)
+    color_inactive = pygame.Color('black')
+    color_active = pygame.Color('#71f0f0')
+    color = color_inactive
+    active = False
+    text = ''
 
     running = True
     while running:
         clock.tick(60)  # Устанавливаем максимальную частоту кадров в 60 FPS
         for event in pygame.event.get():  # Обрабатываем события
             if event.type == pygame.QUIT:  # Если пользователь закрыл окно
-                pygame.quit()  # Завершаем работу Pygame
-                sys.exit()  # Завершаем работу программы
+                pygame.quit()
+                sys.exit()
 
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Если нажата левая кнопка мыши
-                if rect_back.collidepoint(event.pos):  # Если клик пришелся на кнопку "Назад"
-                    SOUND_ON_BUTTON.play()  # Проигрываем звук нажатия кнопки
-                    main_menu(screen)  # Возвращаемся в главное меню
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if rect_back.collidepoint(event.pos):
+                    SOUND_ON_BUTTON.play()
+                    main_menu(screen)
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if rect_save.collidepoint(event.pos):
+                    SOUND_ON_BUTTON.play()
+                    name = text
+                    main_menu(screen)
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if input_box.collidepoint(event.pos):
+                    active = not active
+                else:
+                    active = False
+                color = color_active if active else color_inactive
+
+            if event.type == pygame.KEYDOWN:
+                if active:
+                    if event.key == pygame.K_RETURN:
+                        print(text)
+                        text = ''
+                    elif event.key == pygame.K_BACKSPACE:
+                        text = text[:-1]
+                    else:
+                        if len(text) < 12:
+                            text += event.unicode
+
+        screen.blit(bg, (0, 0))
+        screen.blit(back, rect_back)
+        screen.blit(save, rect_save)
+        screen.blit(avt, (avt_x, avt_y))
+
+        txt_surface = font.render(text, True, color)
+        screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
+        pygame.draw.rect(screen, color, input_box, 2)
+        pygame.display.flip()
 
         contour(screen, rect_back, 'Buttons/cl_back.png',
                 'Buttons/back.png')  # Отображаем кнопку "Назад" с эффектом наведения
