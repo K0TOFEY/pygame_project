@@ -5,10 +5,19 @@ import random
 import time
 import sqlite3
 
+from pygame.examples.music_drop_fade import draw_text_line
 
 # Работа с БД
 # База данных
 DB_NAME = "frogger_knights.db"  # Имя файла базы данных SQLite
+
+def cursor(screen):
+    pygame.mouse.set_visible(False)
+    cursor_image = pygame.image.load('Sprites/cursor.png')
+    cursor_rect = cursor_image.get_rect()
+    if pygame.mouse.get_focused():
+        cursor_rect.topleft = pygame.mouse.get_pos()  # Получаем позицию
+        screen.blit(cursor_image, cursor_rect)
 
 
 def is_level_unlocked(level_number):
@@ -43,8 +52,32 @@ def update_bd(name, s, n):
             return k[0]
         return 0
     elif s == "record":
-        k = cursor.execute("""SELECT name FROM record WHERE coin = 9 ORDER BY deaths""").fetchall()
+        k = cursor.execute("""SELECT name, level1, level2, level3, deaths FROM record 
+        WHERE coin = 9 ORDER BY deaths""").fetchall()
         return k
+    elif s == "how_death":
+        old = cursor.execute(f"""SELECT {"level" + str(n)} FROM record WHERE name = ?""", (name,)).fetchone()
+        now = cursor.execute("""SELECT count FROM death WHERE name = ?""", (name, )).fetchone()[0]
+        if isinstance(old, tuple):
+            old = old[0]
+        if (old and (now < old)) or (not old and (n == 2 or n == 3)):
+            cursor.execute(f"""UPDATE record SET {"level" + str(n)} = {now} 
+            WHERE name = ?""", (name,))
+        elif not old and (n == 1) and (old != 0):
+            cursor.execute(f"""INSERT INTO record(name, {"level" + str(n)}) VALUES(?, {now})""", (name,))
+        death = cursor.execute(f"""SELECT deaths FROM record WHERE name = ?""", (name,)).fetchall()
+        if death:
+            all_zn = cursor.execute("""SELECT level1, level2, level3 FROM record 
+            WHERE name = ?""", (name,)).fetchone()
+            all_death = 0
+            for el in all_zn:
+                if el:
+                    all_death += el
+            cursor.execute(f"""UPDATE record SET deaths = {all_death}""")
+        else:
+            cursor.execute(f"""UPDATE record SET deaths = {now}""")
+    elif s == "users":
+        k = cursor.execute("""SELECT ? FROM record""", )
     conn.commit()
     conn.close()
 
@@ -67,17 +100,8 @@ def play_random_music():  # Проигрыш музыки в меню
     if next_music != current_music:  # Проверяем, чтобы следующий трек не был таким же, как текущий
         pygame.mixer.music.load(next_music)  # Загружаем выбранный трек в проигрыватель
         pygame.mixer.music.play()  # Запускаем воспроизведение трека
-        pygame.mixer.music.set_volume(0.5)  # Устанавливаем громкость трека на 50%
+        pygame.mixer.music.set_volume(0.02)  # Устанавливаем громкость трека на 50%
         current_music = next_music  # Обновляем значение current_music, чтобы запомнить, какой трек сейчас играет
-
-
-def cursor(screen):
-    pygame.mouse.set_visible(False)
-    cursor_image = pygame.image.load('Sprites/cursor.png')
-    cursor_rect = cursor_image.get_rect()
-    if pygame.mouse.get_focused():
-        cursor_rect.topleft = pygame.mouse.get_pos()  # Получаем позицию
-        screen.blit(cursor_image, cursor_rect)
 
 
 # Класс любого спрайта
@@ -411,7 +435,6 @@ def main_menu(screen):
     bg = pygame.image.load(BACKGROUND_FOR_MENU)  # Загружаем изображение фона для меню
     bg = pygame.transform.flip(bg, True, False)  # Отражаем изображение фона по горизонтали
 
-
     # Buttons
     st_btn_rect = st_btn.get_rect(topleft=(100, 210))  # Создаем Rect для кнопки "Старт" и задаем её позицию
     qt_btn_rect = qt_btn.get_rect(topleft=(100, 300))  # Создаем Rect для кнопки "Выход" и задаем её позицию
@@ -424,16 +447,14 @@ def main_menu(screen):
     text_x = 125  # X-координата текста
     text_y = 125  # Y-координата текста
 
-    # рисование на холсте
+    # смена (отрисовка) кадра:
     def draw(screen):
-        screen.blit(bg, (0, 0))  # Отображаем фон на экране
+        screen.blit(bg, (0, 0))
         screen.blit(text, (text_x, text_y))  # Отображаем текст на экране
         screen.blit(st_btn, st_btn_rect)  # Отображаем кнопку "Старт" на экране
         screen.blit(qt_btn, qt_btn_rect)  # Отображаем кнопку "Выход" на экране
         screen.blit(login_btn, log_btn_rect)  # Отображаем кнопку "Пользователь" на экране
         screen.blit(record_btn, rec_btn_rect)  # Отображаем кнопку "Рекорд" на экране
-
-    # смена (отрисовка) кадра:
     pygame.display.flip()  # Обновляем экран
 
     running = True  # Флаг, указывающий, активно ли меню
@@ -464,8 +485,6 @@ def main_menu(screen):
                 if log_btn_rect.collidepoint(event.pos):
                     SOUND_ON_BUTTON.play()
                     login(screen)
-
-
         draw(screen)
         # Наводка на кнопку
         contour(screen, st_btn_rect, 'Buttons/click_start_btn.png', 'Buttons/start_btn.png')  # Отображаем кнопку "Старт" с эффектом наведения
@@ -475,9 +494,7 @@ def main_menu(screen):
         contour(screen, log_btn_rect, 'Buttons/click_login.png', 'Buttons/login.png')  # Отображаем кнопку "Пользователь" с эффектом наведения
 
         contour(screen, rec_btn_rect, 'Buttons/click_record.png', 'Buttons/record.png')  # Отображаем кнопку "Рекорд" с эффектом наведения
-
         cursor(screen)
-
         pygame.display.update()  # Обновляем экран
 
         # Проверяем, закончилась ли музыка, и если да, то включаем следующую
@@ -491,7 +508,7 @@ def lvl_page(screen):
 
     bg = pygame.image.load(BACKGROUND_FOR_MENU)  # Загружаем изображение фона для меню
     bg = pygame.transform.flip(bg, True, False)  # Отражаем изображение фона по горизонтали
-
+    screen.blit(bg, (0, 0))  # Отображаем фон на экране
 
     # Кнопки уровней
     level_1 = pygame.image.load("Buttons/lvl1.png")  # Загружаем изображение кнопки уровня 1
@@ -511,9 +528,8 @@ def lvl_page(screen):
     text_x = 200  # X-координата текста
     text_y = 50  # Y-координата текста
 
-    # Рисование на холсте
     def draw(screen):
-        screen.blit(bg, (0, 0))  # Отображаем фон на экране
+        screen.blit(bg, (0, 0))
         screen.blit(text, (text_x, text_y))  # Отображаем текст на экране
         screen.blit(level_1, rect_level_1)  # Отображаем кнопку уровня 1 на экране
         screen.blit(level_2, rect_level_2)  # Отображаем кнопку уровня 2 на экране
@@ -556,9 +572,7 @@ def lvl_page(screen):
                     start_level(screen, 3)
                 elif rect_level_3.collidepoint(event.pos):  # Если клик пришелся на кнопку уровня 3, но уровень заблокирован
                     print("Этот уровень заблокирован")
-
         draw(screen)
-
         # Наводка на кнопки
         contour(screen, rect_level_1, 'Buttons/cl_lvl1.png', 'Buttons/lvl1.png')  # Отображаем кнопку уровня 1 с эффектом наведения
 
@@ -567,9 +581,7 @@ def lvl_page(screen):
         contour(screen, rect_level_3, 'Buttons/cl_lvl3.png', 'Buttons/lvl3.png')  # Отображаем кнопку уровня 3 с эффектом наведения
 
         contour(screen, rect_back, 'Buttons/cl_back.png', 'Buttons/back.png')  # Отображаем кнопку "Назад" с эффектом наведения
-
         cursor(screen)
-
         pygame.display.update()  # Обновляем экран
 
         # Проверяем, закончилась ли музыка, и если да, то включаем следующую
@@ -584,7 +596,7 @@ def start_level(screen, level_number):
     global name
 
     level1_music_playing = True  # Устанавливаем флаг проигрывания музыки уровня в True
-
+    pygame.mouse.set_visible(False)
     pygame.mixer.music.load(MUSIC_ON_LEVEL)  # Загрузка музыки для уровня
     pygame.mixer.music.play(-1)  # Запуск музыки, -1 означает бесконечный повтор
 
@@ -618,15 +630,17 @@ def start_level(screen, level_number):
 
         # Переход на следующий уровень
         if player.rect.right >= WIDTH and not sprites:  # Если игрок достиг правой границы экрана и все монеты собраны
+            update_bd(name, "how_death", n=level_number)
             update_bd(name, "coin", n=level_number * 3)
-            pygame.mixer.music.stop()  # останавливаем трек
+
+            pygame.mixer.music.stop()
             level1_music_playing = False  # Устанавливаем флаг проигрывания музыки уровня в False
-            if level_number < 3:  # Если не последний уровень
+            if level_number < 3:
                 # Если не последний уровень - запускаем следующий уровень
                 start_level(screen, level_number + 1)
             else:  # Если последний уровень - возвращаемся в меню выбора уровня.
                 lvl_page(screen)
-            return  # Выходим из функции (завершаем текущий уровень)
+            return
         elif player.rect.right >= WIDTH and sprites:
             player.reset()
 
@@ -647,43 +661,47 @@ def start_level(screen, level_number):
         for coin in level_map.coin_group:  # Итерируем все монеты и вызываем функцию update для анимации
             coin.update()  # анимация монет
 
-
         # Обновляем
         pygame.display.flip()  # Обновляем экран
 
 
-# Функция окна с рекордами
+# Функция окна с рекорадми
 def record(screen):
     global current_music  # Используем глобальную переменную для отслеживания текущей музыки
 
-    bg = pygame.image.load(BACKGROUND_FOR_RECORD)  # Загружаем изображение фона для рекордов
-
-    # Кнопка
-    back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
-    rect_back = back.get_rect(topleft=(10, 45))
-
-    records = update_bd(True, "record", 0)
-
-    # Рисование
     def draw(screen):
+        bg = pygame.image.load(BACKGROUND_FOR_RECORD)  # Загружаем изображение фона для рекордов
         screen.blit(bg, (0, 0))  # Отображаем фон на экране
+        # Кнопка
+        back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
+        rect_back = back.get_rect(topleft=(10, 45))
         screen.blit(back, rect_back)  # Отображаем кнопку "Назад" на экране
+        records = update_bd(True, "record", 0)
+        # текст
         font = pygame.font.Font(None, 52)
-        text = font.render("Рекорды", True, (255, 255, 255))
+        text = font.render("Рекорды", True, pygame.Color('#71f0f0'))
         text_x = 400 - text.get_width() // 2
         text_y = 70
         screen.blit(text, (text_x, text_y))
+        column = font.render("name lvl1 lvl2 lv3 all", True, pygame.Color('#71f0f0'))
+        column_x = 400 - column.get_width() // 2
+        screen.blit(column, (column_x, 135))
         for i in range(5):
             if i < len(records):
-                text_rec = font.render(str(i + 1) + ") " + records[i][0], True, (255, 255, 255))
+                s = str(i + 1) + ") " + "  ".join([str(el) for el in records[i]])
+                text_rec = font.render(s, True, pygame.Color('#71f0f0'))
                 text_rec_x = 400 - text_rec.get_width() // 2
-                text_rec_y = 145 + i * 75
+                text_rec_y = 200 + i * 75
                 screen.blit(text_rec, (text_rec_x, text_rec_y))
             else:
                 pass
 
-    pygame.display.flip()  # Обновляем экран
+    back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
+    rect_back = back.get_rect(topleft=(10, 45))
 
+    draw(screen)
+
+    pygame.display.flip()  # Обновляем экран
     running = True
     while running:
         clock.tick(60)  # Устанавливаем максимальную частоту кадров в 60 FPS
@@ -698,12 +716,9 @@ def record(screen):
                     main_menu(screen)  # Возвращаемся в главное меню
 
         draw(screen)
-
         contour(screen, rect_back, 'Buttons/cl_back.png',
                 'Buttons/back.png')  # Отображаем кнопку "Назад" с эффектом наведения
-
         cursor(screen)
-
         pygame.display.update()
 
         # Проверяем, закончилась ли музыка, и если да, то включаем следующую
@@ -711,25 +726,28 @@ def record(screen):
         play_random_music()  # Запускаем случайный трек из списка
 
 
-# Функция логина
 def login(screen):
     global current_music  # Используем глобальную переменную для отслеживания текущей музыки
     global name
 
+    def draw(screen):
+        screen.blit(bg, (0, 0))
+        screen.blit(back, rect_back)
+        screen.blit(save, rect_save)
+        screen.blit(avt, (avt_x, avt_y))
+        screen.blit(message, (mes_x, mes_y))
+
     bg = pygame.image.load(BACKGROUND_FOR_LOGIN)  # Загружаем изображение фона для логина
-
-    # Кнопки
-    back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
-    rect_back = back.get_rect(topleft=(10, 45))
-
-    save = pygame.image.load("Buttons/save_btn.png")  # Загружаем изображение кнопки "Сохранить"
-    rect_save = back.get_rect(topleft=(300, 360))
-
     # текст
     font = pygame.font.Font(None, 52)
     avt = font.render("Авторизация", True, pygame.Color('#71f0f0'))
     avt_x = 400 - avt.get_width() // 2
     avt_y = 90
+
+    back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
+    rect_back = back.get_rect(topleft=(10, 45))
+    save = pygame.image.load("Buttons/save_btn.png")  # Загружаем изображение кнопки "Сохранить"
+    rect_save = back.get_rect(topleft=(300, 360))
 
     s = "Введите имя:"
     message = font.render(s, True, pygame.Color('#71f0f0'))
@@ -759,7 +777,7 @@ def login(screen):
                     main_menu(screen)
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if rect_save.collidepoint(event.pos): # todo сделать проверку на совпадения
+                if rect_save.collidepoint(event.pos):  # todo сделать проверку на совпадения
                     SOUND_ON_BUTTON.play()
                     update_bd(text, "users", 0)
                     name = text
@@ -783,23 +801,17 @@ def login(screen):
                     else:
                         if len(text) < 12:
                             text += event.unicode
-
-        screen.blit(bg, (0, 0))
-        screen.blit(back, rect_back)
-        screen.blit(save, rect_save)
-        screen.blit(avt, (avt_x, avt_y))
-        screen.blit(message, (mes_x, mes_y))
+        draw(screen)
 
         txt_surface = font.render(text, True, color)
         screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
         pygame.draw.rect(screen, color, input_box, 2)
-
         contour(screen, rect_save, 'Buttons/click_save_btn.png',
                 'Buttons/save_btn.png')  # Отображаем кнопку "Назад" с эффектом наведения
 
         contour(screen, rect_back, 'Buttons/cl_back.png',
                 'Buttons/back.png')  # Отображаем кнопку "Назад" с эффектом наведения
-
+        cursor(screen)
         pygame.display.flip()
 
         # Проверяем, закончилась ли музыка, и если да, то включаем следующую
@@ -835,7 +847,7 @@ BACKGROUND_FOR_LOGIN = "Backgrounds/login.png"
 DEATH_ANIMATION_DURATION = 1  # Длительность анимации смерти в секундах
 DEATH_FRAMES = 8  # Кол-во кадров смерти
 COIN_ANIMATION_SPEED = 0.2  # Скорость анимации монет
-name = "Кирилльчик"
+name = "Крол"
 
 # Список музыки для меню
 MENU_MUSIC = [
