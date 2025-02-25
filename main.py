@@ -747,10 +747,14 @@ def login(screen):
     save = pygame.image.load("Buttons/save_btn.png")  # Загружаем изображение кнопки "Сохранить"
     rect_save = back.get_rect(topleft=(300, 340))
 
-
+    s = "Введите имя:"
+    message = font.render(s, True, pygame.Color('#71f0f0'))
+    mes_x = 400 - message.get_width() // 2
+    mes_y = 180
+    fl = True
 
     clock = pygame.time.Clock()
-    input_box = pygame.Rect(200, 240, 407, 52)
+    input_box = pygame.Rect(200, 270, 407, 52)
     color_inactive = pygame.Color('black')
     color_active = pygame.Color('#71f0f0')
     color = color_inactive
@@ -771,9 +775,11 @@ def login(screen):
                     main_menu(screen)
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if rect_save.collidepoint(event.pos):
+                if rect_save.collidepoint(event.pos):  # todo сделать проверку на совпадения
                     SOUND_ON_BUTTON.play()
+                    update_bd(text, "users", 0)
                     name = text
+
                     main_menu(screen)
 
             if event.type == pygame.MOUSEBUTTONDOWN:
