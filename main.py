@@ -594,7 +594,7 @@ def start_level(screen, level_number):
     global name
 
     level1_music_playing = True  # Устанавливаем флаг проигрывания музыки уровня в True
-
+    pygame.mouse.set_visible(False)
     pygame.mixer.music.load(MUSIC_ON_LEVEL)  # Загрузка музыки для уровня
     pygame.mixer.music.play(-1)  # Запуск музыки, -1 означает бесконечный повтор
 
@@ -801,15 +801,16 @@ def login(screen):
                             text += event.unicode
 
         draw(screen)
-        cursor(screen)
 
         txt_surface = font.render(text, True, color)
         screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
         pygame.draw.rect(screen, color, input_box, 2)
-        pygame.display.flip()
-
         contour(screen, rect_back, 'Buttons/cl_back.png',
                 'Buttons/back.png')  # Отображаем кнопку "Назад" с эффектом наведения
+        cursor(screen)
+        pygame.display.flip()
+
+
 
         pygame.display.update()
 
