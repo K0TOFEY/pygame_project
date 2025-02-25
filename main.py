@@ -460,6 +460,12 @@ def main_menu(screen):
                     SOUND_ON_BUTTON.play()
                     record(screen)
 
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Если нажата левая кнопка мыши
+                if log_btn_rect.collidepoint(event.pos):
+                    SOUND_ON_BUTTON.play()
+                    login(screen)
+
+
         draw(screen)
         # Наводка на кнопку
         contour(screen, st_btn_rect, 'Buttons/click_start_btn.png', 'Buttons/start_btn.png')  # Отображаем кнопку "Старт" с эффектом наведения
@@ -641,6 +647,7 @@ def start_level(screen, level_number):
         for coin in level_map.coin_group:  # Итерируем все монеты и вызываем функцию update для анимации
             coin.update()  # анимация монет
 
+
         # Обновляем
         pygame.display.flip()  # Обновляем экран
 
@@ -704,6 +711,102 @@ def record(screen):
         play_random_music()  # Запускаем случайный трек из списка
 
 
+# Функция логина
+def login(screen):
+    global current_music  # Используем глобальную переменную для отслеживания текущей музыки
+    global name
+
+    bg = pygame.image.load(BACKGROUND_FOR_LOGIN)  # Загружаем изображение фона для логина
+
+    # Кнопки
+    back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
+    rect_back = back.get_rect(topleft=(10, 45))
+
+    save = pygame.image.load("Buttons/save_btn.png")  # Загружаем изображение кнопки "Сохранить"
+    rect_save = back.get_rect(topleft=(300, 360))
+
+    # текст
+    font = pygame.font.Font(None, 52)
+    avt = font.render("Авторизация", True, pygame.Color('#71f0f0'))
+    avt_x = 400 - avt.get_width() // 2
+    avt_y = 90
+
+    s = "Введите имя:"
+    message = font.render(s, True, pygame.Color('#71f0f0'))
+    mes_x = 400 - message.get_width() // 2
+    mes_y = 180
+    fl = True
+
+    clock = pygame.time.Clock()
+    input_box = pygame.Rect(200, 270, 407, 52)
+    color_inactive = pygame.Color('black')
+    color_active = pygame.Color('#71f0f0')
+    color = color_inactive
+    active = False
+    text = ''
+
+    running = True
+    while running:
+        clock.tick(60)  # Устанавливаем максимальную частоту кадров в 60 FPS
+        for event in pygame.event.get():  # Обрабатываем события
+            if event.type == pygame.QUIT:  # Если пользователь закрыл окно
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if rect_back.collidepoint(event.pos):
+                    SOUND_ON_BUTTON.play()
+                    main_menu(screen)
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if rect_save.collidepoint(event.pos): # todo сделать проверку на совпадения
+                    SOUND_ON_BUTTON.play()
+                    update_bd(text, "users", 0)
+                    name = text
+
+                    main_menu(screen)
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if input_box.collidepoint(event.pos):
+                    active = not active
+                else:
+                    active = False
+                color = color_active if active else color_inactive
+
+            if event.type == pygame.KEYDOWN:
+                if active:
+                    if event.key == pygame.K_RETURN:
+                        print(text)
+                        text = ''
+                    elif event.key == pygame.K_BACKSPACE:
+                        text = text[:-1]
+                    else:
+                        if len(text) < 12:
+                            text += event.unicode
+
+        screen.blit(bg, (0, 0))
+        screen.blit(back, rect_back)
+        screen.blit(save, rect_save)
+        screen.blit(avt, (avt_x, avt_y))
+        screen.blit(message, (mes_x, mes_y))
+
+        txt_surface = font.render(text, True, color)
+        screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
+        pygame.draw.rect(screen, color, input_box, 2)
+
+        contour(screen, rect_save, 'Buttons/click_save_btn.png',
+                'Buttons/save_btn.png')  # Отображаем кнопку "Назад" с эффектом наведения
+
+        contour(screen, rect_back, 'Buttons/cl_back.png',
+                'Buttons/back.png')  # Отображаем кнопку "Назад" с эффектом наведения
+
+        pygame.display.flip()
+
+        # Проверяем, закончилась ли музыка, и если да, то включаем следующую
+    if not pygame.mixer.music.get_busy():  # Если музыка не проигрывается
+        play_random_music()  # Запускаем случайный трек из списка
+
+
 # -------------- Функция уровня 1
 def level1(screen):
     start_level(screen, 1)
@@ -728,6 +831,7 @@ BACKGROUND = 'black'  # Чёрный цвет для заднего фона
 BACKGROUND_FOR_MENU = 'Backgrounds/menu_bg.jpg'  # Путь к изображению фона для меню
 MUSIC_ON_LEVEL = 'Sounds/dungeoun_music.mp3'  # Путь к музыкальному файлу для уровня
 BACKGROUND_FOR_RECORD = "Backgrounds/record_fon.jpg"
+BACKGROUND_FOR_LOGIN = "Backgrounds/login.png"
 DEATH_ANIMATION_DURATION = 1  # Длительность анимации смерти в секундах
 DEATH_FRAMES = 8  # Кол-во кадров смерти
 COIN_ANIMATION_SPEED = 0.2  # Скорость анимации монет
