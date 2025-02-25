@@ -119,7 +119,7 @@ class Sprite(pygame.sprite.Sprite):
 
 # Класс персонажа
 class Frog(Sprite):
-    def __init__(self, startx, starty, brick_group, spike_group, coin_group, door_group, level_num):  # Принимаем coin_group
+    def __init__(self, startx, starty, brick_group, spike_group, coin_group, fire_group, door_group, level_num):  # Принимаем coin_group
         super().__init__("Froggo/Animation/frog.png", startx, starty)
         self.stand_image = self.image  # Изображение лягушки в состоянии покоя
         self.jump_image = pygame.image.load('Froggo/Animation/jump.png')  # Изображение лягушки в прыжке
@@ -142,6 +142,7 @@ class Frog(Sprite):
         self.brick_group = brick_group  # Группа спрайтов кирпичей
         self.spike_group = spike_group  # Группа спрайтов шипов
         self.coin_group = coin_group  # Группа спрайтов монет
+        self.fire_group = fire_group    # Группа спрайтов огней
         self.door_group = door_group
         self.is_jumping = False
         self.dying = False  # Флаг, показывающий, что началась анимация смерти
@@ -232,6 +233,11 @@ class Frog(Sprite):
             if self.rect.colliderect(spike.rect):  # Проверяем, столкнулся ли Rect лягушки с Rect текущего шипа
                 self.spike_collision()  # Вызываем метод spike_collision для обработки столкновения с шипом
 
+        # Проверка столкновения с огнями
+        for fire in self.fire_group:  # Перебираем все спрайты огней из группы spike_group
+            if self.rect.colliderect(fire.rect):  # Проверяем, столкнулся ли Rect лягушки с Rect текущего огней
+                self.spike_collision()  # Вызываем метод spike_collision для обработки столкновения с огнём
+
         # Проверка столкновений с монетами
         for coin in self.coin_group:  # Перебираем монеты
             if self.rect.colliderect(coin.rect):  # Если игрок столкнулся с монетой
@@ -286,6 +292,28 @@ class Frog(Sprite):
         self.dying = False  # Устанавливаем флаг self.dying в False, чтобы прекратить анимацию смерти (если она шла)
         self.vsp = 0  # Обнуляем вертикальную скорость
         self.death_animation_index = 0  # Обнуляем индекс смерти
+
+class Fire(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load('Fire/fire_animation1.png')  # Загружаем текстуру Огня
+        self.rect = self.image.get_rect()  # Создаем Rect для Огня
+        self.rect.x = x  # Устанавливаем x-координату Rect Огня
+        self.rect.y = y  # Устанавливаем y-координату Rect Огня
+        self.coin_cycle = [pygame.image.load(f"Fire/fire_animation{i}.png") for i in
+                           range(1, 9)]  # Создаем список кадров для анимации Огня
+        self.animation_index = 0  # Указываем, какой сейчас кадр анимации
+        self.last_update = pygame.time.get_ticks()  # Указываем, когда последний раз обновлялась анимация
+        self.animation_cooldown = 100  # Указываем время между сменой кадров в анимации
+
+    def update(self):
+        now = pygame.time.get_ticks()  # Получаем текущее время в миллисекундах
+        if now - self.last_update > self.animation_cooldown:  # Проверяем, прошло ли достаточно времени с момента последнего обновления
+            self.last_update = now  # Обновляем время последнего обновления
+            # Увеличиваем индекс текущего кадра анимации, зацикливая его (оператор %)
+            self.animation_index = (self.animation_index + 1) % len(self.coin_cycle)
+            # Устанавливаем текущий кадр анимации в качестве изображения спрайта
+            self.image = self.coin_cycle[self.animation_index]
 
 
 # Класс блока
@@ -356,6 +384,7 @@ class Map():
         self.coin_group = pygame.sprite.Group()  # Группа спрайтов для монет
         self.door_group = pygame.sprite.Group()  # Группа спрайтов для двери
         self.all_sprites = pygame.sprite.Group()  # Группа для всех спрайтов
+        self.fire_group = pygame.sprite.Group()   # Группа спрайтов для огней
         self.collision_layer = self.tmx_data.get_layer_by_name('Tiles')  # Получаем слой, содержащий информацию о коллизиях
         self.map_image = self.make_map()  # Создаем изображение карты, объединяя все слои в одну поверхность
         self.rect = self.map_image.get_rect()  # Создаем Rect для карты
@@ -372,7 +401,7 @@ class Map():
                     # Отображаем тайл на временной поверхности
                     temp_surface.blit(image, (x * self.tile_width, y * self.tile_height))
 
-        # Создаем спрайты кирпичей и шипов
+        # Создаем спрайты кирпичей и шипов и дверей и огней
         for obj in self.tmx_data.objects:  # Перебираем все объекты, определенные в TMX-файле (в Tiled Editor)
             if obj.name == "Wall":  # Если имя объекта "Wall" (т.е. это кирпич)
                 brick = Brick(obj.x, obj.y, obj.width, obj.height)  # Создаем объект Brick
@@ -389,6 +418,10 @@ class Map():
                 door = Door(obj.x, obj.y, obj.width, obj.height)
                 self.door_group.add(door)
                 self.all_sprites.add(door)
+            elif obj.name == 'Fire':    # Если имя объекта "Fire" (т.е. это огонь)
+                fire = Fire(obj.x, obj.y)
+                self.fire_group.add(fire)
+                self.all_sprites.add(fire)
 
         return temp_surface  # Возвращаем созданное изображение карты
 
@@ -403,6 +436,8 @@ class Map():
             surface.blit(coin.image, coin.rect)
         for door in self.door_group:  # Отрисовываем двери
             surface.blit(door.image, door.rect)
+        for fire in self.fire_group:  # Отрисовываем огни
+            surface.blit(fire.image, fire.rect)
 
     def get_collision(self):
         return self.collision_layer  # Возвращает слой, который используется для определения столкновений
@@ -411,7 +446,7 @@ class Map():
         for obj in self.tmx_data.objects:  # Перебираем все объекты, определенные в TMX-файле
             if obj.name == "Player":  # Если имя объекта "Player" (т.е. это объект, обозначающий стартовую позицию)
                 # Создаем объект Frog, передавая координаты объекта "Player" и группы спрайтов
-                self.Player = Frog(obj.x, obj.y, self.brick_group, self.spike_group, self.coin_group,
+                self.Player = Frog(obj.x, obj.y, self.brick_group, self.spike_group, self.coin_group, self.fire_group,
                                    self.door_group, self.level_num)  # Передаем группу с кирпичами и шипами
                 self.Player.map = self  # Устанавливаем ссылку на текущую карту в объекте игрока (для доступа к данным карты из игрока)
                 self.all_sprites.add(self.Player)  # Добавляем игрока в группу всех спрайтов
