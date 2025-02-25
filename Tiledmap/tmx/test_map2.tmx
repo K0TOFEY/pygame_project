@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="left-up" width="25" height="19" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="214">
+<map version="1.10" tiledversion="1.11.1" orientation="orthogonal" renderorder="left-up" width="25" height="19" tilewidth="32" tileheight="32" infinite="0" nextlayerid="4" nextobjectid="217">
  <tileset firstgid="1" source="../tsx/bg.tsx"/>
  <tileset firstgid="2" source="../tsx/brick_1.tsx"/>
  <tileset firstgid="3" source="../tsx/spike.tsx"/>
@@ -18,13 +18,13 @@
 4,4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,
 4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,
 4,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,4,
-4,1,1,1,1,1,1,1,1,4,4,4,4,4,1,1,1,1,1,1,1,1,1,1,4,
+4,1,1,1,1,1,1,1,1,4,1,4,1,4,1,1,1,1,1,1,1,1,1,1,4,
 4,1,1,1,1,1,1,1,1,4,1,1,1,4,1,1,1,1,1,1,1,1,1,1,4,
 4,1,1,1,1,1,1,1,1,4,1,1,1,4,1,4,1,1,1,1,1,1,1,1,4,
 4,1,1,1,1,1,1,1,1,4,1,1,1,4,1,4,1,1,1,1,1,1,1,1,4,
 4,1,1,1,1,1,4,1,1,4,1,1,1,4,1,4,1,4,4,4,1,1,1,1,1,
 4,1,1,1,1,1,4,1,1,4,1,1,1,4,1,4,1,1,1,4,4,1,1,1,1,
-4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4
+4,4,4,4,4,4,4,1,1,4,4,4,4,4,1,4,4,4,4,4,4,4,4,4,4
 </data>
  </layer>
  <layer id="2" name="Spikes" width="25" height="19">
@@ -46,7 +46,7 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,0,3,3,3,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
@@ -55,7 +55,7 @@
   <object id="33" name="LevelEnd" x="800" y="512">
    <polygon points="0,0 0,64 32,64 32,0"/>
   </object>
-  <object id="37" name="Coin" x="256" y="544" width="32" height="32">
+  <object id="37" name="Coin" x="160" y="480" width="32" height="32">
    <ellipse/>
   </object>
   <object id="38" name="Coin" x="576" y="224" width="32" height="32">
@@ -73,8 +73,6 @@
   <object id="46" name="Wall" x="192" y="576" width="32" height="32"/>
   <object id="47" name="Wall" x="192" y="544" width="32" height="32"/>
   <object id="48" name="Wall" x="192" y="512" width="32" height="32"/>
-  <object id="49" name="Wall" x="224" y="576" width="32" height="32"/>
-  <object id="50" name="Wall" x="256" y="576" width="32" height="32"/>
   <object id="51" name="Wall" x="288" y="576" width="32" height="32"/>
   <object id="52" name="Wall" x="0" y="544" width="32" height="32"/>
   <object id="53" name="Wall" x="0" y="512" width="32" height="32"/>
@@ -197,7 +195,6 @@
   <object id="170" name="Wall" x="352" y="576" width="32" height="32"/>
   <object id="171" name="Wall" x="384" y="576" width="32" height="32"/>
   <object id="172" name="Wall" x="416" y="576" width="32" height="32"/>
-  <object id="173" name="Wall" x="448" y="576" width="32" height="32"/>
   <object id="174" name="Wall" x="480" y="544" width="32" height="32"/>
   <object id="175" name="Wall" x="480" y="512" width="32" height="32"/>
   <object id="176" name="Wall" x="480" y="480" width="32" height="32"/>
@@ -208,9 +205,7 @@
   <object id="181" name="Wall" x="416" y="448" width="32" height="32"/>
   <object id="182" name="Wall" x="416" y="416" width="32" height="32"/>
   <object id="183" name="Wall" x="416" y="384" width="32" height="32"/>
-  <object id="184" name="Wall" x="384" y="384" width="32" height="32"/>
   <object id="185" name="Wall" x="352" y="384" width="32" height="32"/>
-  <object id="186" name="Wall" x="320" y="384" width="32" height="32"/>
   <object id="187" name="Wall" x="288" y="384" width="32" height="32"/>
   <object id="188" name="Wall" x="288" y="416" width="32" height="32"/>
   <object id="189" name="Wall" x="288" y="448" width="32" height="32"/>
@@ -238,5 +233,8 @@
   <object id="211" name="Wall" x="448" y="224" width="32" height="32"/>
   <object id="212" name="Wall" x="480" y="224" width="32" height="32"/>
   <object id="213" name="Wall" x="512" y="224" width="32" height="32"/>
+  <object id="214" name="Spike" x="320" y="544" width="32" height="32"/>
+  <object id="215" name="Spike" x="352" y="544" width="32" height="32"/>
+  <object id="216" name="Spike" x="384" y="544" width="32" height="32"/>
  </objectgroup>
 </map>
