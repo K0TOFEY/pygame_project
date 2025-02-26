@@ -121,7 +121,7 @@ class Sprite(pygame.sprite.Sprite):
 
 # Класс персонажа
 class Frog(Sprite):
-    def __init__(self, startx, starty, brick_group, spike_group, coin_group, door_group, level_num):  # Принимаем coin_group
+    def __init__(self, startx, starty, brick_group, spike_group, coin_group, door_group, level_num, fire_group):  # Принимаем coin_group
         super().__init__("Froggo/Animation/frog.png", startx, starty)
         self.stand_image = self.image  # Изображение лягушки в состоянии покоя
         self.jump_image = pygame.image.load('Froggo/Animation/jump.png')  # Изображение лягушки в прыжке
@@ -145,6 +145,7 @@ class Frog(Sprite):
         self.spike_group = spike_group  # Группа спрайтов шипов
         self.coin_group = coin_group  # Группа спрайтов монет
         self.door_group = door_group
+        self.fire_group = fire_group
         self.is_jumping = False
         self.dying = False  # Флаг, показывающий, что началась анимация смерти
         self.death_start_time = 0  # Время начала анимации смерти
@@ -232,7 +233,11 @@ class Frog(Sprite):
         # Проверка столкновений с шипами
         for spike in self.spike_group:  # Перебираем все спрайты шипов из группы spike_group
             if self.rect.colliderect(spike.rect):  # Проверяем, столкнулся ли Rect лягушки с Rect текущего шипа
-                self.spike_collision()  # Вызываем метод spike_collision для обработки столкновения с шипом
+                self.dead_collision()  # Вызываем метод spike_collision для обработки столкновения с шипом
+
+        for fire in self.fire_group:
+            if self.rect.colliderect(fire.rect):
+                self.dead_collision()
 
         # Проверка столкновений с монетами
         for coin in self.coin_group:  # Перебираем монеты
@@ -272,10 +277,10 @@ class Frog(Sprite):
         # Возвращает значение флага self.onground, который указывает, находится ли лягушка на земле
         return self.onground
 
-    def spike_collision(self):
+    def dead_collision(self):
         if not self.dying:  # Если анимация смерти еще не началась (чтобы не прерывать ее, если она уже идет)
             self.dying = True  # Начинаем анимацию смерти (устанавливаем флаг self.dying в True)
-            self.death_start_time = time.time()  # Запоминаем время начала анимации смерти (для контроля времени отображения кадров анимации)
+            self.death_start_time = time.time()
 
     def reset(self):
         for obj in self.map.tmx_data.objects:  # Перебираем все объекты, определённые на карте (в Tiled Editor)
@@ -294,7 +299,7 @@ class Frog(Sprite):
 class Brick(pygame.sprite.Sprite):  # Класс для кирпичей
     def __init__(self, x, y, width, height):
         super().__init__()
-        self.image = pygame.image.load('Sprites/brick_4.png')  # Загружаем текстуру
+        self.image = pygame.image.load('Sprites/brick_6.png')  # Загружаем текстуру
         self.image = pygame.transform.scale(self.image, (width, height))  # Меняем размер текстуры
         self.rect = self.image.get_rect()  # Получаем rect текстуры
         self.rect.x = x  # Указываем х rect
@@ -343,6 +348,52 @@ class Money(pygame.sprite.Sprite):
             self.image = self.coin_cycle[self.animation_index]
 
 
+class Torch(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load('Torch/torch_animation1.png')  # Загружаем текстуру Монеты
+        self.rect = self.image.get_rect()  # Создаем Rect для монеты
+        self.rect.x = x  # Устанавливаем x-координату Rect монеты
+        self.rect.y = y  # Устанавливаем y-координату Rect монеты
+        self.coin_cycle = [pygame.image.load(f"Torch/torch_animation{i}.png") for i in
+                           range(1, 9)]  # Создаем список кадров для анимации монеты
+        self.animation_index = 0  # Указываем, какой сейчас кадр анимации
+        self.last_update = pygame.time.get_ticks()  # Указываем, когда последний раз обновлялась анимация
+        self.animation_cooldown = 100  # Указываем время между сменой кадров в анимации
+
+    def update(self):
+        now = pygame.time.get_ticks()  # Получаем текущее время в миллисекундах
+        if now - self.last_update > self.animation_cooldown:  # Проверяем, прошло ли достаточно времени с момента последнего обновления
+            self.last_update = now  # Обновляем время последнего обновления
+            # Увеличиваем индекс текущего кадра анимации, зацикливая его (оператор %)
+            self.animation_index = (self.animation_index + 1) % len(self.coin_cycle)
+            # Устанавливаем текущий кадр анимации в качестве изображения спрайта
+            self.image = self.coin_cycle[self.animation_index]
+
+
+class Fire(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load('Fire/fire_animation1.png')  # Загружаем текстуру Огня
+        self.rect = self.image.get_rect()  # Создаем Rect для Огня
+        self.rect.x = x  # Устанавливаем x-координату Rect Огня
+        self.rect.y = y  # Устанавливаем y-координату Rect Огня
+        self.fire_cycle = [pygame.image.load(f"Fire/fire_animation{i}.png") for i in
+                           range(1, 9)]  # Создаем список кадров для анимации Огня
+        self.animation_index = 0  # Указываем, какой сейчас кадр анимации
+        self.last_update = pygame.time.get_ticks()  # Указываем, когда последний раз обновлялась анимация
+        self.animation_cooldown = 100  # Указываем время между сменой кадров в анимации
+
+    def update(self):
+        now = pygame.time.get_ticks()  # Получаем текущее время в миллисекундах
+        if now - self.last_update > self.animation_cooldown:  # Проверяем, прошло ли достаточно времени с момента последнего обновления
+            self.last_update = now  # Обновляем время последнего обновления
+            # Увеличиваем индекс текущего кадра анимации, зацикливая его (оператор %)
+            self.animation_index = (self.animation_index + 1) % len(self.fire_cycle)
+            # Устанавливаем текущий кадр анимации в качестве изображения спрайта
+            self.image = self.fire_cycle[self.animation_index]
+
+
 # Класс уровней
 class Map():
     def __init__(self, filename, level_num):
@@ -357,6 +408,8 @@ class Map():
         self.spike_group = pygame.sprite.Group()  # Группа спрайтов для шипов
         self.coin_group = pygame.sprite.Group()  # Группа спрайтов для монет
         self.door_group = pygame.sprite.Group()  # Группа спрайтов для двери
+        self.torch_group = pygame.sprite.Group()
+        self.fire_group = pygame.sprite.Group()
         self.all_sprites = pygame.sprite.Group()  # Группа для всех спрайтов
         self.collision_layer = self.tmx_data.get_layer_by_name('Tiles')  # Получаем слой, содержащий информацию о коллизиях
         self.map_image = self.make_map()  # Создаем изображение карты, объединяя все слои в одну поверхность
@@ -391,6 +444,14 @@ class Map():
                 door = Door(obj.x, obj.y, obj.width, obj.height)
                 self.door_group.add(door)
                 self.all_sprites.add(door)
+            elif obj.name == "Torch":
+                torch = Torch(obj.x, obj.y)
+                self.torch_group.add(torch)
+                self.all_sprites.add(torch)
+            elif obj.name == "Fire":
+                fire = Fire(obj.x, obj.y)
+                self.fire_group.add(fire)
+                self.all_sprites.add(fire)
 
         return temp_surface  # Возвращаем созданное изображение карты
 
@@ -405,6 +466,10 @@ class Map():
             surface.blit(coin.image, coin.rect)
         for door in self.door_group:  # Отрисовываем двери
             surface.blit(door.image, door.rect)
+        for torch in self.torch_group:
+            surface.blit(torch.image, torch.rect)
+        for fire in self.fire_group:
+            surface.blit(fire.image, fire.rect)
 
     def get_collision(self):
         return self.collision_layer  # Возвращает слой, который используется для определения столкновений
@@ -414,7 +479,7 @@ class Map():
             if obj.name == "Player":  # Если имя объекта "Player" (т.е. это объект, обозначающий стартовую позицию)
                 # Создаем объект Frog, передавая координаты объекта "Player" и группы спрайтов
                 self.Player = Frog(obj.x, obj.y, self.brick_group, self.spike_group, self.coin_group,
-                                   self.door_group, self.level_num)  # Передаем группу с кирпичами и шипами
+                                   self.door_group, self.level_num, self.fire_group)  # Передаем группу с кирпичами и шипами
                 self.Player.map = self  # Устанавливаем ссылку на текущую карту в объекте игрока (для доступа к данным карты из игрока)
                 self.all_sprites.add(self.Player)  # Добавляем игрока в группу всех спрайтов
                 break  # Прекращаем перебор объектов, т.к. игрок создан и добавлен
@@ -596,7 +661,7 @@ def start_level(screen, level_number):
     global name
 
     level1_music_playing = True  # Устанавливаем флаг проигрывания музыки уровня в True
-    pygame.mouse.set_visible(False)
+    pygame.mouse.set_visible(True)
     pygame.mixer.music.load(MUSIC_ON_LEVEL)  # Загрузка музыки для уровня
     pygame.mixer.music.play(-1)  # Запуск музыки, -1 означает бесконечный повтор
 
@@ -660,6 +725,12 @@ def start_level(screen, level_number):
         player.draw(screen)  # Отрисовываем игрока на экране
         for coin in level_map.coin_group:  # Итерируем все монеты и вызываем функцию update для анимации
             coin.update()  # анимация монет
+
+        for fire in level_map.fire_group:
+            fire.update()
+
+        for torch in level_map.torch_group:
+            torch.update()
 
         # Обновляем
         pygame.display.flip()  # Обновляем экран
@@ -847,7 +918,7 @@ BACKGROUND_FOR_LOGIN = "Backgrounds/login.png"
 DEATH_ANIMATION_DURATION = 1  # Длительность анимации смерти в секундах
 DEATH_FRAMES = 8  # Кол-во кадров смерти
 COIN_ANIMATION_SPEED = 0.2  # Скорость анимации монет
-name = "Крол"
+name = ""
 
 # Список музыки для меню
 MENU_MUSIC = [
