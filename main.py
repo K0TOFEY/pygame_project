@@ -9,6 +9,7 @@ import sqlite3
 # База данных
 DB_NAME = "frogger_knights.db"  # Имя файла базы данных SQLite
 
+
 def cursor(screen):
     pygame.mouse.set_visible(False)
     cursor_image = pygame.image.load('Sprites/cursor.png')
