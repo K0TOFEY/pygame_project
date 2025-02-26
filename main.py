@@ -511,9 +511,8 @@ def main_menu(screen):
     log_btn_rect = login_btn.get_rect(topleft=(110, 380))  # Создаем Rect для кнопки "Пользователь" и задаем её позицию
     rec_btn_rect = record_btn.get_rect(topleft=(210, 380))  # Создаем Rect для кнопки "Рекорд" и задаем её позицию
 
-    # Работа над текстом
-    font = pygame.font.Font(None, 52)  # Создаём шрифт
-    text = font.render("Проклятие лягушачьего рыцаря", True, (255, 255, 255))  # Создаем текст
+    # Работа над текстом  # Создаём шрифт
+    text = FONT.render("Проклятие лягушачьего рыцаря", True, (255, 255, 255))  # Создаем текст
     text_x = 125  # X-координата текста
     text_y = 125  # Y-координата текста
 
@@ -640,12 +639,11 @@ def lvl_page(screen):
                     fl_s = False
 
         # Текст
-        font = pygame.font.Font(None, 64)  # Создаём шрифт
         if fl_s:
             s = "Выберите уровень"
         else:
             s = "Уровень заблокирован"
-        text = font.render(s, True, pygame.Color('#71f0f0'))  # Создаем текст
+        text = FONT.render(s, True, pygame.Color('#71f0f0'))  # Создаем текст
         text_x = 400 - text.get_width() // 2  # X-координата текста
         text_y = 90  # Y-координата текста
 
@@ -718,7 +716,7 @@ def start_level(screen, level_number):
                 # Если не последний уровень - запускаем следующий уровень
                 start_level(screen, level_number + 1)
             else:  # Если последний уровень - возвращаемся в меню выбора уровня.
-                lvl_page(screen)
+                final(screen)
             return
         elif player.rect.right >= WIDTH and sprites:
             player.reset()
@@ -764,18 +762,17 @@ def record(screen):
         screen.blit(back, rect_back)  # Отображаем кнопку "Назад" на экране
         records = update_bd(True, "record", 0)
         # текст
-        font = pygame.font.Font(None, 52)
-        text = font.render("Рекорды", True, pygame.Color('#71f0f0'))
+        text = FONT.render("Рекорды", True, pygame.Color('#71f0f0'))
         text_x = 400 - text.get_width() // 2
         text_y = 70
         screen.blit(text, (text_x, text_y))
-        column = font.render("name lvl1 lvl2 lv3 all", True, pygame.Color('#71f0f0'))
+        column = FONT.render("name lvl1 lvl2 lv3 all", True, pygame.Color('#71f0f0'))
         column_x = 400 - column.get_width() // 2
         screen.blit(column, (column_x, 135))
         for i in range(5):
             if i < len(records):
                 s = str(i + 1) + ") " + "  ".join([str(el) for el in records[i]])
-                text_rec = font.render(s, True, pygame.Color('#71f0f0'))
+                text_rec = FONT.render(s, True, pygame.Color('#71f0f0'))
                 text_rec_x = 400 - text_rec.get_width() // 2
                 text_rec_y = 200 + i * 75
                 screen.blit(text_rec, (text_rec_x, text_rec_y))
@@ -807,6 +804,49 @@ def record(screen):
         play_random_music()  # Запускаем случайный трек из списка
 
 
+def final(screen):
+    global current_music  # Используем глобальную переменную для отслеживания текущей музыки
+    global name
+
+    def draw(screen):
+        screen.blit(bg, (0, 0))
+        screen.blit(back, rect_back)
+        screen.blit(win, (win_x, win_y))
+
+    bg = pygame.image.load(BACKGROUND_FOR_FINAL)
+
+    back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
+    rect_back = back.get_rect(topleft=(10, 45))
+
+    win = FONT.render("Поздравляем с победой!", True, pygame.Color('#2ca3b8'))
+    win_x = 400 - win.get_width() // 2
+    win_y = 270 - win.get_height() // 2
+
+    clock = pygame.time.Clock()
+
+    running = True
+    while running:
+        clock.tick(60)  # Устанавливаем максимальную частоту кадров в 60 FPS
+        for event in pygame.event.get():  # Обрабатываем события
+            if event.type == pygame.QUIT:  # Если пользователь закрыл окно
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if rect_back.collidepoint(event.pos):
+                    SOUND_ON_BUTTON.play()
+                    main_menu(screen)
+
+        draw(screen)
+        contour(screen, rect_back, 'Buttons/cl_back.png',
+                'Buttons/back.png')  # Отображаем кнопку "Назад" с эффектом наведения
+        cursor(screen)
+        pygame.display.flip()
+
+    if not pygame.mixer.music.get_busy():  # Если музыка не проигрывается
+        play_random_music()  # Запускаем случайный трек из списка
+
+
 def login(screen):
     global current_music  # Используем глобальную переменную для отслеживания текущей музыки
     global name
@@ -820,8 +860,7 @@ def login(screen):
 
     bg = pygame.image.load(BACKGROUND_FOR_LOGIN)  # Загружаем изображение фона для логина
     # текст
-    font = pygame.font.Font(None, 52)
-    avt = font.render("Авторизация", True, pygame.Color('#71f0f0'))
+    avt = FONT.render("Авторизация", True, pygame.Color('#71f0f0'))
     avt_x = 400 - avt.get_width() // 2
     avt_y = 90
 
@@ -883,13 +922,13 @@ def login(screen):
             s = "Имя уже занято"
         elif fl == 3:
             s = "Имя сохранено"
-        message = font.render(s, True, pygame.Color('#71f0f0'))
+        message = FONT.render(s, True, pygame.Color('#71f0f0'))
         mes_x = 400 - message.get_width() // 2
         mes_y = 180
 
         draw(screen)
 
-        txt_surface = font.render(text, True, color)
+        txt_surface = FONT.render(text, True, color)
         screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
         pygame.draw.rect(screen, color, input_box, 2)
         contour(screen, rect_save, 'Buttons/click_save_btn.png',
@@ -921,6 +960,7 @@ def level3(screen):
 
 
 clock = pygame.time.Clock()  # Создаем объект Clock для управления частотой кадров
+pygame.font.init()
 
 # Константы
 WIDTH = 800  # Длина окна
@@ -934,6 +974,7 @@ BACKGROUND_FOR_FINAL = "Backgrounds/final.jpg"
 DEATH_ANIMATION_DURATION = 1  # Длительность анимации смерти в секундах
 DEATH_FRAMES = 8  # Кол-во кадров смерти
 COIN_ANIMATION_SPEED = 0.2  # Скорость анимации монет
+FONT = pygame.font.Font(None, 52)
 name = ""
 
 # Список музыки для меню
