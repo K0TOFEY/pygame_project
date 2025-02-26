@@ -102,7 +102,7 @@ def play_random_music():  # Проигрыш музыки в меню
     if next_music != current_music:  # Проверяем, чтобы следующий трек не был таким же, как текущий
         pygame.mixer.music.load(next_music)  # Загружаем выбранный трек в проигрыватель
         pygame.mixer.music.play()  # Запускаем воспроизведение трека
-        pygame.mixer.music.set_volume(0.02)  # Устанавливаем громкость трека на 50%
+        pygame.mixer.music.set_volume(0.3)  # Устанавливаем громкость трека на 50%
         current_music = next_music  # Обновляем значение current_music, чтобы запомнить, какой трек сейчас играет
 
 
