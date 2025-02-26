@@ -77,7 +77,10 @@ def update_bd(name, s, n):
         else:
             cursor.execute(f"""UPDATE record SET deaths = {now}""")
     elif s == "users":
-        k = cursor.execute("""SELECT ? FROM record""", )
+        k = cursor.execute("""SELECT name FROM record WHERE name = ?""", (name,)).fetchall()
+        if k:
+            return False
+        return True
     conn.commit()
     conn.close()
 
@@ -244,6 +247,9 @@ class Frog(Sprite):
             if self.rect.colliderect(coin.rect):  # Если игрок столкнулся с монетой
                 self.coin_sound.play()  # Проигрываем звук
                 coin.kill()  # Удаляем монету из всех групп
+
+        if self.rect.y > 570:
+            self.dead_collision()
 
     def walk_animation(self):
         self.image = self.walk_cycle[self.animation_index]  # Получаем текущий кадр анимации ходьбы из списка walk_cycle
@@ -531,7 +537,7 @@ def main_menu(screen):
                 sys.exit()  # Завершаем работу программы
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Если нажата левая кнопка мыши
-                if st_btn_rect.collidepoint(event.pos):  # Если клик пришелся на кнопку "Старт"
+                if st_btn_rect.collidepoint(event.pos) and name:  # Если клик пришелся на кнопку "Старт"
                     SOUND_ON_BUTTON.play()  # Проигрываем звук нажатия кнопки
                     lvl_page(screen)  # Открываем окно выбора уровня
 
@@ -550,6 +556,7 @@ def main_menu(screen):
                 if log_btn_rect.collidepoint(event.pos):
                     SOUND_ON_BUTTON.play()
                     login(screen)
+
         draw(screen)
         # Наводка на кнопку
         contour(screen, st_btn_rect, 'Buttons/click_start_btn.png', 'Buttons/start_btn.png')  # Отображаем кнопку "Старт" с эффектом наведения
@@ -740,12 +747,13 @@ def start_level(screen, level_number):
 def record(screen):
     global current_music  # Используем глобальную переменную для отслеживания текущей музыки
 
+    bg = pygame.image.load(BACKGROUND_FOR_RECORD)
+
+    back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
+    rect_back = back.get_rect(topleft=(10, 45))
+
     def draw(screen):
-        bg = pygame.image.load(BACKGROUND_FOR_RECORD)  # Загружаем изображение фона для рекордов
         screen.blit(bg, (0, 0))  # Отображаем фон на экране
-        # Кнопка
-        back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
-        rect_back = back.get_rect(topleft=(10, 45))
         screen.blit(back, rect_back)  # Отображаем кнопку "Назад" на экране
         records = update_bd(True, "record", 0)
         # текст
@@ -766,11 +774,6 @@ def record(screen):
                 screen.blit(text_rec, (text_rec_x, text_rec_y))
             else:
                 pass
-
-    back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
-    rect_back = back.get_rect(topleft=(10, 45))
-
-    draw(screen)
 
     pygame.display.flip()  # Обновляем экран
     running = True
@@ -820,12 +823,7 @@ def login(screen):
     save = pygame.image.load("Buttons/save_btn.png")  # Загружаем изображение кнопки "Сохранить"
     rect_save = back.get_rect(topleft=(300, 360))
 
-    s = "Введите имя:"
-    message = font.render(s, True, pygame.Color('#71f0f0'))
-    mes_x = 400 - message.get_width() // 2
-    mes_y = 180
-    fl = True
-
+    fl = 1
     clock = pygame.time.Clock()
     input_box = pygame.Rect(200, 270, 407, 52)
     color_inactive = pygame.Color('black')
@@ -848,13 +846,13 @@ def login(screen):
                     main_menu(screen)
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if rect_save.collidepoint(event.pos):  # todo сделать проверку на совпадения
+                if rect_save.collidepoint(event.pos):
                     SOUND_ON_BUTTON.play()
-                    update_bd(text, "users", 0)
-                    name = text
-
-                    main_menu(screen)
-
+                    if update_bd(text, "users", 0):
+                        name = text
+                        fl = 3
+                    else:
+                        fl = 2
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if input_box.collidepoint(event.pos):
                     active = not active
@@ -872,6 +870,16 @@ def login(screen):
                     else:
                         if len(text) < 12:
                             text += event.unicode
+        if fl == 1:
+            s = "Введите имя:"
+        elif fl == 2:
+            s = "Имя уже занято"
+        elif fl == 3:
+            s = "Имя сохранено"
+        message = font.render(s, True, pygame.Color('#71f0f0'))
+        mes_x = 400 - message.get_width() // 2
+        mes_y = 180
+
         draw(screen)
 
         txt_surface = font.render(text, True, color)
