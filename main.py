@@ -5,8 +5,6 @@ import random
 import time
 import sqlite3
 
-from pygame.examples.music_drop_fade import draw_text_line
-
 # Работа с БД
 # База данных
 DB_NAME = "frogger_knights.db"  # Имя файла базы данных SQLite
@@ -923,6 +921,7 @@ BACKGROUND_FOR_MENU = 'Backgrounds/menu_bg.jpg'  # Путь к изображе�
 MUSIC_ON_LEVEL = 'Sounds/dungeoun_music.mp3'  # Путь к музыкальному файлу для уровня
 BACKGROUND_FOR_RECORD = "Backgrounds/record_fon.jpg"
 BACKGROUND_FOR_LOGIN = "Backgrounds/login.png"
+BACKGROUND_FOR_FINAL = "Backgrounds/final.jpg"
 DEATH_ANIMATION_DURATION = 1  # Длительность анимации смерти в секундах
 DEATH_FRAMES = 8  # Кол-во кадров смерти
 COIN_ANIMATION_SPEED = 0.2  # Скорость анимации монет
