@@ -72,9 +72,9 @@ def update_bd(name, s, n):
             for el in all_zn:
                 if el:
                     all_death += el
-            cursor.execute(f"""UPDATE record SET deaths = {all_death}""")
+            cursor.execute(f"""UPDATE record SET deaths = {all_death} WHERE name = ?""", (name,))
         else:
-            cursor.execute(f"""UPDATE record SET deaths = {now}""")
+            cursor.execute(f"""UPDATE record SET deaths = {now} WHERE name = ?""", (name,))
     elif s == "users":
         k = cursor.execute("""SELECT name FROM record WHERE name = ?""", (name,)).fetchall()
         if k:
@@ -593,11 +593,6 @@ def lvl_page(screen):
     rect_level_3 = level_3.get_rect(topleft=(550, 250))  # Создаем Rect для кнопки уровня 3 и задаем её позицию
     rect_back = back.get_rect(topleft=(10, 45))  # Создаем Rect для кнопки "Назад" и задаем её позицию
 
-    # Текст
-    font = pygame.font.Font(None, 64)  # Создаём шрифт
-    text = font.render("Выберите уровень", True, (255, 0, 0))  # Создаем текст
-    text_x = 200  # X-координата текста
-    text_y = 50  # Y-координата текста
 
     def draw(screen):
         screen.blit(bg, (0, 0))
@@ -609,7 +604,7 @@ def lvl_page(screen):
 
     # Смена кадра
     pygame.display.flip()  # Обновляем экран
-
+    fl_s = True
     # Цикл действий
     running = True  # Флаг, указывающий, активна ли страница выбора уровня
     while running:  # Главный цикл страницы выбора уровня
@@ -635,14 +630,25 @@ def lvl_page(screen):
                     SOUND_ON_BUTTON.play()
                     start_level(screen, 2)
                 elif rect_level_2.collidepoint(event.pos):
-                    print("Этот уровень заблокирован")  # Выводим сообщение в консоль
+                    fl_s = False  # Выводим сообщение в консоль
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if rect_level_3.collidepoint(event.pos) and is_level_unlocked(3):  # Если клик пришелся на кнопку уровня 3 и уровень разблокирован
                     SOUND_ON_BUTTON.play()
                     start_level(screen, 3)
                 elif rect_level_3.collidepoint(event.pos):  # Если клик пришелся на кнопку уровня 3, но уровень заблокирован
-                    print("Этот уровень заблокирован")
+                    fl_s = False
+
+        # Текст
+        font = pygame.font.Font(None, 64)  # Создаём шрифт
+        if fl_s:
+            s = "Выберите уровень"
+        else:
+            s = "Уровень заблокирован"
+        text = font.render(s, True, pygame.Color('#71f0f0'))  # Создаем текст
+        text_x = 400 - text.get_width() // 2  # X-координата текста
+        text_y = 90  # Y-координата текста
+
         draw(screen)
         # Наводка на кнопки
         contour(screen, rect_level_1, 'Buttons/cl_lvl1.png', 'Buttons/lvl1.png')  # Отображаем кнопку уровня 1 с эффектом наведения
@@ -674,11 +680,12 @@ def start_level(screen, level_number):
     back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
     rect_back = back.get_rect(topleft=(10, 25))  # Создаем Rect для кнопки "Назад" и задаем её позицию
 
+    fl_coin = True
+
     coin = update_bd(name, "how_coins", 0)
     if coin >= level_number * 3:
-        level_map = Map(f"Tiledmap/tmx/coin_map{level_number}.tmx", level_number)
-    else:
-        level_map = Map(f"Tiledmap/tmx/test_map{level_number}.tmx", level_number)  # Создаем объект Map, загружая карту уровня из TMX-файла
+        fl_coin = False
+    level_map = Map(f"Tiledmap/tmx/test_map{level_number}.tmx", level_number)
     sprites = level_map.coin_group  # Получаем группу спрайтов монет из карты уровня
     level_map.view_player()  # Создаем объект игрока (Frog) на карте уровня
 
@@ -702,7 +709,8 @@ def start_level(screen, level_number):
         # Переход на следующий уровень
         if player.rect.right >= WIDTH and not sprites:  # Если игрок достиг правой границы экрана и все монеты собраны
             update_bd(name, "how_death", n=level_number)
-            update_bd(name, "coin", n=level_number * 3)
+            if fl_coin:
+                update_bd(name, "coin", n=level_number * 3)
 
             pygame.mixer.music.stop()
             level1_music_playing = False  # Устанавливаем флаг проигрывания музыки уровня в False
