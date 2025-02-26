@@ -595,7 +595,7 @@ def lvl_page(screen):
 
     # Текст
     font = pygame.font.Font(None, 64)  # Создаём шрифт
-    text = font.render("Выберите уровень", True, (255, 0, 0))  # Создаем текст
+    text = font.render("Выберите уровень", True, (255, 140, 0))  # Создаем текст
     text_x = 200  # X-координата текста
     text_y = 50  # Y-координата текста
 
