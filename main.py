@@ -5,10 +5,18 @@ import random
 import time
 import sqlite3
 
-
 # Работа с БД
 # База данных
 DB_NAME = "frogger_knights.db"  # Имя файла базы данных SQLite
+
+
+def cursor(screen):
+    pygame.mouse.set_visible(False)
+    cursor_image = pygame.image.load('Sprites/cursor.png')
+    cursor_rect = cursor_image.get_rect()
+    if pygame.mouse.get_focused():
+        cursor_rect.topleft = pygame.mouse.get_pos()  # Получаем позицию
+        screen.blit(cursor_image, cursor_rect)
 
 
 def is_level_unlocked(level_number):
@@ -67,6 +75,11 @@ def update_bd(name, s, n):
             cursor.execute(f"""UPDATE record SET deaths = {all_death}""")
         else:
             cursor.execute(f"""UPDATE record SET deaths = {now}""")
+    elif s == "users":
+        k = cursor.execute("""SELECT name FROM record WHERE name = ?""", (name,)).fetchall()
+        if k:
+            return False
+        return True
     conn.commit()
     conn.close()
 
@@ -110,7 +123,7 @@ class Sprite(pygame.sprite.Sprite):
 
 # Класс персонажа
 class Frog(Sprite):
-    def __init__(self, startx, starty, brick_group, spike_group, coin_group, door_group, level_num):  # Принимаем coin_group
+    def __init__(self, startx, starty, brick_group, spike_group, coin_group, door_group, level_num, fire_group):  # Принимаем coin_group
         super().__init__("Froggo/Animation/frog.png", startx, starty)
         self.stand_image = self.image  # Изображение лягушки в состоянии покоя
         self.jump_image = pygame.image.load('Froggo/Animation/jump.png')  # Изображение лягушки в прыжке
@@ -134,6 +147,7 @@ class Frog(Sprite):
         self.spike_group = spike_group  # Группа спрайтов шипов
         self.coin_group = coin_group  # Группа спрайтов монет
         self.door_group = door_group
+        self.fire_group = fire_group
         self.is_jumping = False
         self.dying = False  # Флаг, показывающий, что началась анимация смерти
         self.death_start_time = 0  # Время начала анимации смерти
@@ -221,13 +235,20 @@ class Frog(Sprite):
         # Проверка столкновений с шипами
         for spike in self.spike_group:  # Перебираем все спрайты шипов из группы spike_group
             if self.rect.colliderect(spike.rect):  # Проверяем, столкнулся ли Rect лягушки с Rect текущего шипа
-                self.spike_collision()  # Вызываем метод spike_collision для обработки столкновения с шипом
+                self.dead_collision()  # Вызываем метод spike_collision для обработки столкновения с шипом
+
+        for fire in self.fire_group:
+            if self.rect.colliderect(fire.rect):
+                self.dead_collision()
 
         # Проверка столкновений с монетами
         for coin in self.coin_group:  # Перебираем монеты
             if self.rect.colliderect(coin.rect):  # Если игрок столкнулся с монетой
                 self.coin_sound.play()  # Проигрываем звук
                 coin.kill()  # Удаляем монету из всех групп
+
+        if self.rect.y > 570:
+            self.dead_collision()
 
     def walk_animation(self):
         self.image = self.walk_cycle[self.animation_index]  # Получаем текущий кадр анимации ходьбы из списка walk_cycle
@@ -261,10 +282,10 @@ class Frog(Sprite):
         # Возвращает значение флага self.onground, который указывает, находится ли лягушка на земле
         return self.onground
 
-    def spike_collision(self):
+    def dead_collision(self):
         if not self.dying:  # Если анимация смерти еще не началась (чтобы не прерывать ее, если она уже идет)
             self.dying = True  # Начинаем анимацию смерти (устанавливаем флаг self.dying в True)
-            self.death_start_time = time.time()  # Запоминаем время начала анимации смерти (для контроля времени отображения кадров анимации)
+            self.death_start_time = time.time()
 
     def reset(self):
         for obj in self.map.tmx_data.objects:  # Перебираем все объекты, определённые на карте (в Tiled Editor)
@@ -283,7 +304,7 @@ class Frog(Sprite):
 class Brick(pygame.sprite.Sprite):  # Класс для кирпичей
     def __init__(self, x, y, width, height):
         super().__init__()
-        self.image = pygame.image.load('Sprites/brick_4.png')  # Загружаем текстуру
+        self.image = pygame.image.load('Sprites/brick_6.png')  # Загружаем текстуру
         self.image = pygame.transform.scale(self.image, (width, height))  # Меняем размер текстуры
         self.rect = self.image.get_rect()  # Получаем rect текстуры
         self.rect.x = x  # Указываем х rect
@@ -332,6 +353,52 @@ class Money(pygame.sprite.Sprite):
             self.image = self.coin_cycle[self.animation_index]
 
 
+class Torch(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load('Torch/torch_animation1.png')  # Загружаем текстуру Монеты
+        self.rect = self.image.get_rect()  # Создаем Rect для монеты
+        self.rect.x = x  # Устанавливаем x-координату Rect монеты
+        self.rect.y = y  # Устанавливаем y-координату Rect монеты
+        self.coin_cycle = [pygame.image.load(f"Torch/torch_animation{i}.png") for i in
+                           range(1, 9)]  # Создаем список кадров для анимации монеты
+        self.animation_index = 0  # Указываем, какой сейчас кадр анимации
+        self.last_update = pygame.time.get_ticks()  # Указываем, когда последний раз обновлялась анимация
+        self.animation_cooldown = 100  # Указываем время между сменой кадров в анимации
+
+    def update(self):
+        now = pygame.time.get_ticks()  # Получаем текущее время в миллисекундах
+        if now - self.last_update > self.animation_cooldown:  # Проверяем, прошло ли достаточно времени с момента последнего обновления
+            self.last_update = now  # Обновляем время последнего обновления
+            # Увеличиваем индекс текущего кадра анимации, зацикливая его (оператор %)
+            self.animation_index = (self.animation_index + 1) % len(self.coin_cycle)
+            # Устанавливаем текущий кадр анимации в качестве изображения спрайта
+            self.image = self.coin_cycle[self.animation_index]
+
+
+class Fire(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load('Fire/fire_animation1.png')  # Загружаем текстуру Огня
+        self.rect = self.image.get_rect()  # Создаем Rect для Огня
+        self.rect.x = x  # Устанавливаем x-координату Rect Огня
+        self.rect.y = y  # Устанавливаем y-координату Rect Огня
+        self.fire_cycle = [pygame.image.load(f"Fire/fire_animation{i}.png") for i in
+                           range(1, 9)]  # Создаем список кадров для анимации Огня
+        self.animation_index = 0  # Указываем, какой сейчас кадр анимации
+        self.last_update = pygame.time.get_ticks()  # Указываем, когда последний раз обновлялась анимация
+        self.animation_cooldown = 100  # Указываем время между сменой кадров в анимации
+
+    def update(self):
+        now = pygame.time.get_ticks()  # Получаем текущее время в миллисекундах
+        if now - self.last_update > self.animation_cooldown:  # Проверяем, прошло ли достаточно времени с момента последнего обновления
+            self.last_update = now  # Обновляем время последнего обновления
+            # Увеличиваем индекс текущего кадра анимации, зацикливая его (оператор %)
+            self.animation_index = (self.animation_index + 1) % len(self.fire_cycle)
+            # Устанавливаем текущий кадр анимации в качестве изображения спрайта
+            self.image = self.fire_cycle[self.animation_index]
+
+
 # Класс уровней
 class Map():
     def __init__(self, filename, level_num):
@@ -346,6 +413,8 @@ class Map():
         self.spike_group = pygame.sprite.Group()  # Группа спрайтов для шипов
         self.coin_group = pygame.sprite.Group()  # Группа спрайтов для монет
         self.door_group = pygame.sprite.Group()  # Группа спрайтов для двери
+        self.torch_group = pygame.sprite.Group()
+        self.fire_group = pygame.sprite.Group()
         self.all_sprites = pygame.sprite.Group()  # Группа для всех спрайтов
         self.collision_layer = self.tmx_data.get_layer_by_name('Tiles')  # Получаем слой, содержащий информацию о коллизиях
         self.map_image = self.make_map()  # Создаем изображение карты, объединяя все слои в одну поверхность
@@ -380,6 +449,14 @@ class Map():
                 door = Door(obj.x, obj.y, obj.width, obj.height)
                 self.door_group.add(door)
                 self.all_sprites.add(door)
+            elif obj.name == "Torch":
+                torch = Torch(obj.x, obj.y)
+                self.torch_group.add(torch)
+                self.all_sprites.add(torch)
+            elif obj.name == "Fire":
+                fire = Fire(obj.x, obj.y)
+                self.fire_group.add(fire)
+                self.all_sprites.add(fire)
 
         return temp_surface  # Возвращаем созданное изображение карты
 
@@ -394,6 +471,10 @@ class Map():
             surface.blit(coin.image, coin.rect)
         for door in self.door_group:  # Отрисовываем двери
             surface.blit(door.image, door.rect)
+        for torch in self.torch_group:
+            surface.blit(torch.image, torch.rect)
+        for fire in self.fire_group:
+            surface.blit(fire.image, fire.rect)
 
     def get_collision(self):
         return self.collision_layer  # Возвращает слой, который используется для определения столкновений
@@ -403,7 +484,7 @@ class Map():
             if obj.name == "Player":  # Если имя объекта "Player" (т.е. это объект, обозначающий стартовую позицию)
                 # Создаем объект Frog, передавая координаты объекта "Player" и группы спрайтов
                 self.Player = Frog(obj.x, obj.y, self.brick_group, self.spike_group, self.coin_group,
-                                   self.door_group, self.level_num)  # Передаем группу с кирпичами и шипами
+                                   self.door_group, self.level_num, self.fire_group)  # Передаем группу с кирпичами и шипами
                 self.Player.map = self  # Устанавливаем ссылку на текущую карту в объекте игрока (для доступа к данным карты из игрока)
                 self.all_sprites.add(self.Player)  # Добавляем игрока в группу всех спрайтов
                 break  # Прекращаем перебор объектов, т.к. игрок создан и добавлен
@@ -423,7 +504,6 @@ def main_menu(screen):
     # Фон
     bg = pygame.image.load(BACKGROUND_FOR_MENU)  # Загружаем изображение фона для меню
     bg = pygame.transform.flip(bg, True, False)  # Отражаем изображение фона по горизонтали
-    screen.blit(bg, (0, 0))  # Отображаем фон на экране
 
     # Buttons
     st_btn_rect = st_btn.get_rect(topleft=(100, 210))  # Создаем Rect для кнопки "Старт" и задаем её позицию
@@ -437,13 +517,14 @@ def main_menu(screen):
     text_x = 125  # X-координата текста
     text_y = 125  # Y-координата текста
 
-    # рисование на холсте
-    screen.blit(text, (text_x, text_y))  # Отображаем текст на экране
-    screen.blit(st_btn, st_btn_rect)  # Отображаем кнопку "Старт" на экране
-    screen.blit(qt_btn, qt_btn_rect)  # Отображаем кнопку "Выход" на экране
-    screen.blit(login_btn, log_btn_rect)  # Отображаем кнопку "Пользователь" на экране
-    screen.blit(record_btn, rec_btn_rect)  # Отображаем кнопку "Рекорд" на экране
     # смена (отрисовка) кадра:
+    def draw(screen):
+        screen.blit(bg, (0, 0))
+        screen.blit(text, (text_x, text_y))  # Отображаем текст на экране
+        screen.blit(st_btn, st_btn_rect)  # Отображаем кнопку "Старт" на экране
+        screen.blit(qt_btn, qt_btn_rect)  # Отображаем кнопку "Выход" на экране
+        screen.blit(login_btn, log_btn_rect)  # Отображаем кнопку "Пользователь" на экране
+        screen.blit(record_btn, rec_btn_rect)  # Отображаем кнопку "Рекорд" на экране
     pygame.display.flip()  # Обновляем экран
 
     running = True  # Флаг, указывающий, активно ли меню
@@ -455,7 +536,7 @@ def main_menu(screen):
                 sys.exit()  # Завершаем работу программы
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Если нажата левая кнопка мыши
-                if st_btn_rect.collidepoint(event.pos):  # Если клик пришелся на кнопку "Старт"
+                if st_btn_rect.collidepoint(event.pos) and name:  # Если клик пришелся на кнопку "Старт"
                     SOUND_ON_BUTTON.play()  # Проигрываем звук нажатия кнопки
                     lvl_page(screen)  # Открываем окно выбора уровня
 
@@ -475,6 +556,7 @@ def main_menu(screen):
                     SOUND_ON_BUTTON.play()
                     login(screen)
 
+        draw(screen)
         # Наводка на кнопку
         contour(screen, st_btn_rect, 'Buttons/click_start_btn.png', 'Buttons/start_btn.png')  # Отображаем кнопку "Старт" с эффектом наведения
 
@@ -483,7 +565,7 @@ def main_menu(screen):
         contour(screen, log_btn_rect, 'Buttons/click_login.png', 'Buttons/login.png')  # Отображаем кнопку "Пользователь" с эффектом наведения
 
         contour(screen, rec_btn_rect, 'Buttons/click_record.png', 'Buttons/record.png')  # Отображаем кнопку "Рекорд" с эффектом наведения
-
+        cursor(screen)
         pygame.display.update()  # Обновляем экран
 
         # Проверяем, закончилась ли музыка, и если да, то включаем следующую
@@ -517,12 +599,13 @@ def lvl_page(screen):
     text_x = 200  # X-координата текста
     text_y = 50  # Y-координата текста
 
-    # Рисование на холсте
-    screen.blit(text, (text_x, text_y))  # Отображаем текст на экране
-    screen.blit(level_1, rect_level_1)  # Отображаем кнопку уровня 1 на экране
-    screen.blit(level_2, rect_level_2)  # Отображаем кнопку уровня 2 на экране
-    screen.blit(level_3, rect_level_3)  # Отображаем кнопку уровня 3 на экране
-    screen.blit(back, rect_back)  # Отображаем кнопку "Назад" на экране
+    def draw(screen):
+        screen.blit(bg, (0, 0))
+        screen.blit(text, (text_x, text_y))  # Отображаем текст на экране
+        screen.blit(level_1, rect_level_1)  # Отображаем кнопку уровня 1 на экране
+        screen.blit(level_2, rect_level_2)  # Отображаем кнопку уровня 2 на экране
+        screen.blit(level_3, rect_level_3)  # Отображаем кнопку уровня 3 на экране
+        screen.blit(back, rect_back)  # Отображаем кнопку "Назад" на экране
 
     # Смена кадра
     pygame.display.flip()  # Обновляем экран
@@ -560,7 +643,7 @@ def lvl_page(screen):
                     start_level(screen, 3)
                 elif rect_level_3.collidepoint(event.pos):  # Если клик пришелся на кнопку уровня 3, но уровень заблокирован
                     print("Этот уровень заблокирован")
-
+        draw(screen)
         # Наводка на кнопки
         contour(screen, rect_level_1, 'Buttons/cl_lvl1.png', 'Buttons/lvl1.png')  # Отображаем кнопку уровня 1 с эффектом наведения
 
@@ -569,7 +652,7 @@ def lvl_page(screen):
         contour(screen, rect_level_3, 'Buttons/cl_lvl3.png', 'Buttons/lvl3.png')  # Отображаем кнопку уровня 3 с эффектом наведения
 
         contour(screen, rect_back, 'Buttons/cl_back.png', 'Buttons/back.png')  # Отображаем кнопку "Назад" с эффектом наведения
-
+        cursor(screen)
         pygame.display.update()  # Обновляем экран
 
         # Проверяем, закончилась ли музыка, и если да, то включаем следующую
@@ -584,7 +667,7 @@ def start_level(screen, level_number):
     global name
 
     level1_music_playing = True  # Устанавливаем флаг проигрывания музыки уровня в True
-
+    pygame.mouse.set_visible(True)
     pygame.mixer.music.load(MUSIC_ON_LEVEL)  # Загрузка музыки для уровня
     pygame.mixer.music.play(-1)  # Запуск музыки, -1 означает бесконечный повтор
 
@@ -649,6 +732,12 @@ def start_level(screen, level_number):
         for coin in level_map.coin_group:  # Итерируем все монеты и вызываем функцию update для анимации
             coin.update()  # анимация монет
 
+        for fire in level_map.fire_group:
+            fire.update()
+
+        for torch in level_map.torch_group:
+            torch.update()
+
         # Обновляем
         pygame.display.flip()  # Обновляем экран
 
@@ -657,33 +746,33 @@ def start_level(screen, level_number):
 def record(screen):
     global current_music  # Используем глобальную переменную для отслеживания текущей музыки
 
-    bg = pygame.image.load(BACKGROUND_FOR_RECORD)  # Загружаем изображение фона для рекордов
-    screen.blit(bg, (0, 0))  # Отображаем фон на экране
+    bg = pygame.image.load(BACKGROUND_FOR_RECORD)
 
-    # Кнопка
     back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
     rect_back = back.get_rect(topleft=(10, 45))
-    screen.blit(back, rect_back)  # Отображаем кнопку "Назад" на экране
 
-    records = update_bd(True, "record", 0)
-    # текст
-    font = pygame.font.Font(None, 52)
-    text = font.render("Рекорды", True,  pygame.Color('#71f0f0'))
-    text_x = 400 - text.get_width() // 2
-    text_y = 70
-    screen.blit(text, (text_x, text_y))
-    column = font.render("name lvl1 lvl2 lv3 all", True,  pygame.Color('#71f0f0'))
-    column_x = 400 - column.get_width() // 2
-    screen.blit(column, (column_x, 135))
-    for i in range(5):
-        if i < len(records):
-            s = str(i + 1) + ") " + "  ".join([str(el) for el in records[i]])
-            text_rec = font.render(s, True,  pygame.Color('#71f0f0'))
-            text_rec_x = 400 - text_rec.get_width() // 2
-            text_rec_y = 200 + i * 75
-            screen.blit(text_rec, (text_rec_x, text_rec_y))
-        else:
-            pass
+    def draw(screen):
+        screen.blit(bg, (0, 0))  # Отображаем фон на экране
+        screen.blit(back, rect_back)  # Отображаем кнопку "Назад" на экране
+        records = update_bd(True, "record", 0)
+        # текст
+        font = pygame.font.Font(None, 52)
+        text = font.render("Рекорды", True, pygame.Color('#71f0f0'))
+        text_x = 400 - text.get_width() // 2
+        text_y = 70
+        screen.blit(text, (text_x, text_y))
+        column = font.render("name lvl1 lvl2 lv3 all", True, pygame.Color('#71f0f0'))
+        column_x = 400 - column.get_width() // 2
+        screen.blit(column, (column_x, 135))
+        for i in range(5):
+            if i < len(records):
+                s = str(i + 1) + ") " + "  ".join([str(el) for el in records[i]])
+                text_rec = font.render(s, True, pygame.Color('#71f0f0'))
+                text_rec_x = 400 - text_rec.get_width() // 2
+                text_rec_y = 200 + i * 75
+                screen.blit(text_rec, (text_rec_x, text_rec_y))
+            else:
+                pass
 
     pygame.display.flip()  # Обновляем экран
     running = True
@@ -699,9 +788,10 @@ def record(screen):
                     SOUND_ON_BUTTON.play()  # Проигрываем звук нажатия кнопки
                     main_menu(screen)  # Возвращаемся в главное меню
 
+        draw(screen)
         contour(screen, rect_back, 'Buttons/cl_back.png',
                 'Buttons/back.png')  # Отображаем кнопку "Назад" с эффектом наведения
-
+        cursor(screen)
         pygame.display.update()
 
         # Проверяем, закончилась ли музыка, и если да, то включаем следующую
@@ -709,28 +799,32 @@ def record(screen):
         play_random_music()  # Запускаем случайный трек из списка
 
 
-
 def login(screen):
     global current_music  # Используем глобальную переменную для отслеживания текущей музыки
     global name
 
+    def draw(screen):
+        screen.blit(bg, (0, 0))
+        screen.blit(back, rect_back)
+        screen.blit(save, rect_save)
+        screen.blit(avt, (avt_x, avt_y))
+        screen.blit(message, (mes_x, mes_y))
+
     bg = pygame.image.load(BACKGROUND_FOR_LOGIN)  # Загружаем изображение фона для логина
-
-    # Кнопки
-    back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
-    rect_back = back.get_rect(topleft=(10, 45))
-
-    save = pygame.image.load("Buttons/save_btn.png")  # Загружаем изображение кнопки "Сохранить"
-    rect_save = back.get_rect(topleft=(300, 340))
-
     # текст
     font = pygame.font.Font(None, 52)
     avt = font.render("Авторизация", True, pygame.Color('#71f0f0'))
     avt_x = 400 - avt.get_width() // 2
-    avt_y = 150
+    avt_y = 90
 
+    back = pygame.image.load("Buttons/back.png")  # Загружаем изображение кнопки "Назад"
+    rect_back = back.get_rect(topleft=(10, 45))
+    save = pygame.image.load("Buttons/save_btn.png")  # Загружаем изображение кнопки "Сохранить"
+    rect_save = back.get_rect(topleft=(300, 360))
+
+    fl = 1
     clock = pygame.time.Clock()
-    input_box = pygame.Rect(200, 240, 407, 52)
+    input_box = pygame.Rect(200, 270, 407, 52)
     color_inactive = pygame.Color('black')
     color_active = pygame.Color('#71f0f0')
     color = color_inactive
@@ -753,9 +847,11 @@ def login(screen):
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if rect_save.collidepoint(event.pos):
                     SOUND_ON_BUTTON.play()
-                    name = text
-                    main_menu(screen)
-
+                    if update_bd(text, "users", 0):
+                        name = text
+                        fl = 3
+                    else:
+                        fl = 2
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if input_box.collidepoint(event.pos):
                     active = not active
@@ -773,22 +869,28 @@ def login(screen):
                     else:
                         if len(text) < 12:
                             text += event.unicode
+        if fl == 1:
+            s = "Введите имя:"
+        elif fl == 2:
+            s = "Имя уже занято"
+        elif fl == 3:
+            s = "Имя сохранено"
+        message = font.render(s, True, pygame.Color('#71f0f0'))
+        mes_x = 400 - message.get_width() // 2
+        mes_y = 180
 
-        screen.blit(bg, (0, 0))
-        screen.blit(back, rect_back)
-        screen.blit(save, rect_save)
-        screen.blit(avt, (avt_x, avt_y))
+        draw(screen)
 
         txt_surface = font.render(text, True, color)
         screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
         pygame.draw.rect(screen, color, input_box, 2)
-        pygame.display.flip()
-        clock.tick(30)
+        contour(screen, rect_save, 'Buttons/click_save_btn.png',
+                'Buttons/save_btn.png')  # Отображаем кнопку "Назад" с эффектом наведения
 
         contour(screen, rect_back, 'Buttons/cl_back.png',
                 'Buttons/back.png')  # Отображаем кнопку "Назад" с эффектом наведения
-
-        pygame.display.update()
+        cursor(screen)
+        pygame.display.flip()
 
         # Проверяем, закончилась ли музыка, и если да, то включаем следующую
     if not pygame.mixer.music.get_busy():  # Если музыка не проигрывается
@@ -796,7 +898,6 @@ def login(screen):
 
 
 # -------------- Функция уровня 1
-
 def level1(screen):
     start_level(screen, 1)
 
@@ -821,10 +922,11 @@ BACKGROUND_FOR_MENU = 'Backgrounds/menu_bg.jpg'  # Путь к изображе�
 MUSIC_ON_LEVEL = 'Sounds/dungeoun_music.mp3'  # Путь к музыкальному файлу для уровня
 BACKGROUND_FOR_RECORD = "Backgrounds/record_fon.jpg"
 BACKGROUND_FOR_LOGIN = "Backgrounds/login.png"
+BACKGROUND_FOR_FINAL = "Backgrounds/final.jpg"
 DEATH_ANIMATION_DURATION = 1  # Длительность анимации смерти в секундах
 DEATH_FRAMES = 8  # Кол-во кадров смерти
 COIN_ANIMATION_SPEED = 0.2  # Скорость анимации монет
-name = "Крол"
+name = ""
 
 # Список музыки для меню
 MENU_MUSIC = [
